@@ -13,22 +13,71 @@ NILVALUE = '-'
 SP = b' '
 # As defined in RFC5424 Section 7
 REGISTERED_SD_IDs = ('timeQuality', 'origin', 'meta')
-# Version of the protocol we support
 SYSLOG_VERSION = '1'
-
-FRAMING_OCTET_COUNTING = 1
-FRAMING_NON_TRANSPARENT = 2
 
 
 class Rfc5424SysLogHandler(SysLogHandler, object):
-    """An RFC 5424-complaint Syslog Handler for the python logging framework"""
+    """
+    A handler class which sends RFC 5424 formatted logging records to a syslog server.
+    """
+    # RFC6587 framing
+    FRAMING_OCTET_COUNTING = 1
+    FRAMING_NON_TRANSPARENT = 2
 
     def __init__(self, address=('localhost', SYSLOG_UDP_PORT),
                  facility=SysLogHandler.LOG_USER,
                  socktype=socket.SOCK_DGRAM,
                  framing=FRAMING_NON_TRANSPARENT,
                  hostname=None, appname=None, procid=None, structured_data=None, enterprise_id=None):
+        """
+        Returns a new instance of the Rfc5424SysLogHandler class intended to communicate with
+        a remote machine whose address is given by address in the form of a (host, port) tuple.
+        If address is not specified, ('localhost', 514) is used. The address is used to open a
+        socket. An alternative to providing a (host, port) tuple is providing an address as a
+        string, for example ‘/dev/log’. In this case, a Unix domain socket is used to send the
+        message to the syslog. If facility is not specified, LOG_USER is used. The type of
+        socket opened depends on the socktype argument, which defaults to socket.SOCK_DGRAM
+        and thus opens a UDP socket. To open a TCP socket (for use with the newer syslog
+        daemons such as rsyslog), specify a value of socket.SOCK_STREAM.
 
+        Note that if your server is not listening on UDP port 514, SysLogHandler may appear
+        not to work. In that case, check what address you should be using for a domain socket
+        - it’s system dependent. For example, on Linux it’s usually ‘/dev/log’ but on OS/X
+        it’s ‘/var/run/syslog’. You’ll need to check your platform and use the appropriate
+        address (you may need to do this check at runtime if your application needs to run
+        on several platforms). On Windows, you pretty much have to use the UDP option.
+
+        Args:
+            address (tuple):
+                address in the form of a (host, port) tuple
+            facility (int):
+                One of the Rfc5424SysLogHandler.LOG_* values.
+            socktype (int):
+                One of socket.SOCK_STREAM (TCP) or socket.SOCK_DGRAM (UDP).
+            framing (int):
+                One of the Rfc5424SysLogHandler.FRAMING_* values according to
+                RFC6587 section 3.4. Only applies when sockettype is socket.SOCK_STREAM (TCP)
+                and is used to give the syslog server an indication about the boundaries
+                of the message. Defaults to FRAMING_NON_TRANSPARENT which will escape all
+                newline characters in the message and end the message with a newline character.
+                When set to FRAMING_OCTET_COUNTING, it will prepend the message length to the
+                begin of the message.
+            hostname (str):
+                The hostname of the system where the message originated from.
+                Defaults to `socket.gethostname()`
+            appname (str):
+                The name of the application. Defaults to the name of the logger that sent
+                the message.
+            procid (int):
+                The process ID of the sending application. Defaults to the `process` attribute
+                of the log record.
+            structured_data (dict):
+                A dictionary with structured data that is added to every message. Per message your
+                can add more structured data by adding it to the `extra` argument of the log function.
+            enterprise_id (int):
+                Then Private Enterprise Number. This is used to compose the structured data IDs when
+                they do not include an Enterprise ID and are not one of the reserved structured data IDs
+        """
         self.hostname = hostname
         self.appname = appname
         self.procid = procid
@@ -113,6 +162,7 @@ class Rfc5424SysLogHandler(SysLogHandler, object):
             else:
                 sd_params = []
 
+            # Clean key-value pairs
             for (param_name, param_value) in sd_params:
                 param_name = param_name.replace('=', '').replace(' ', '').replace(']', '').replace('"', '')
                 param_value = param_value.replace('\\', '\\\\').replace('"', '\\"').replace(']', '\\]')
@@ -125,11 +175,13 @@ class Rfc5424SysLogHandler(SysLogHandler, object):
 
             cleaned_sd_params = SP.join(cleaned_sd_params)
 
+            # Clean structured data ID
             sd_id = sd_id.replace('=', '').replace(' ', '').replace(']', '').replace('"', '')
             if '@' not in sd_id and sd_id not in REGISTERED_SD_IDs:
                 sd_id = '@'.join((sd_id, enterprise_id))
             sd_id = sd_id.encode('ascii', 'replace')[:32]
 
+            # build structed data element
             sd_element = b''.join((b'[', sd_id, SP, cleaned_sd_params, b']'))
             cleaned_structured_data.append(sd_element)
 
@@ -145,7 +197,7 @@ class Rfc5424SysLogHandler(SysLogHandler, object):
         # SYSLOG-MSG
         # with RFC6587 framing
         if self.socktype == socket.SOCK_STREAM:
-            if self.framing == FRAMING_NON_TRANSPARENT:
+            if self.framing == Rfc5424SysLogHandler.FRAMING_NON_TRANSPARENT:
                 msg = msg.replace(b'\n', b'\\n')
                 syslog_msg = SP.join((header, structured_data, msg, b'\n'))
             else:
@@ -155,6 +207,7 @@ class Rfc5424SysLogHandler(SysLogHandler, object):
             syslog_msg = SP.join((header, structured_data, msg))
 
         # Off it goes
+        # Copied from SysLogHandler
         try:
             if self.unixsocket:
                 try:

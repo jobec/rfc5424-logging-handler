@@ -3,7 +3,7 @@ from rfc5424logging import Rfc5424SysLogHandler
 import socket
 
 logger = logging.getLogger('test.test')
-logger.addHandler(Rfc5424SysLogHandler(address=('10.107.106.4', 5013)))
+logger.addHandler(Rfc5424SysLogHandler(address=('10.10.10.10', 514)))
 logger.setLevel(logging.DEBUG)
 
 extra = {
