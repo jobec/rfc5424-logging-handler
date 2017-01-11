@@ -1,4 +1,3 @@
-#! /usr/bin/env python
 from setuptools import setup, find_packages
 
 from rfc5424logging import __version__
@@ -16,7 +15,7 @@ setup(
     author_email='joris.beckers@gmail.com',
     url="https://github.com/jobec/rfc5424-logging-handler",
     download_url="https://pypi.python.org/pypi/rfc5424-logging-handler",
-    description='An RFC5424-Compliant Syslog Handler for the Python Logging Framework',
+    description='A more up-to-date, RFC5424-Compliant syslog handler for the Python logging framework',
     long_description=readme + '\n\n' + changelog,
     license="BSD",
     keywords='python logging handler syslog rfc5424',
