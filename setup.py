@@ -1,7 +1,5 @@
 from setuptools import setup, find_packages
 
-from rfc5424logging import __version__
-
 with open('README.rst') as readme_file:
     readme = readme_file.read()
 with open('CHANGELOG.rst') as changelog_file:
@@ -9,7 +7,7 @@ with open('CHANGELOG.rst') as changelog_file:
 
 setup(
     name='rfc5424-logging-handler',
-    version=__version__,
+    version='0.0.2',
     packages=find_packages(),
     author='Joris Beckers',
     author_email='joris.beckers@gmail.com',

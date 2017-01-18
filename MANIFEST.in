@@ -1,0 +1,5 @@
+include README.rst
+include CHANGELOG.rst
+
+recursive-exclude * __pycache__
+recursive-exclude * *.py[co]
