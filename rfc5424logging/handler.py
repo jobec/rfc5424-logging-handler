@@ -1,3 +1,4 @@
+# coding=utf-8
 import datetime
 import socket
 from codecs import BOM_UTF8
