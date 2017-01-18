@@ -88,7 +88,7 @@ class Rfc5424SysLogHandler(SysLogHandler, object):
         if self.structured_data is None:
             self.structured_data = OrderedDict()
 
-        super().__init__(address, facility, socktype)
+        super(Rfc5424SysLogHandler).__init__(address, facility, socktype)
 
     def get_hostname(self, record):
         return getattr(record, 'hostname', self.hostname)
