@@ -13,4 +13,3 @@ class TestRfc5424(TestCase):
         logger.addHandler(sh)
         msg_type = 'interesting'
         logger.info('This is an %s message', msg_type)
-
