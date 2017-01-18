@@ -1,12 +1,11 @@
+# coding=utf-8
 import datetime
 import socket
-import os
-import sys
-from logging.handlers import SysLogHandler, SYSLOG_UDP_PORT
-from tzlocal import get_localzone
-from collections import OrderedDict
 from codecs import BOM_UTF8
-import datetime
+from collections import OrderedDict
+from logging.handlers import SysLogHandler, SYSLOG_UDP_PORT
+
+from tzlocal import get_localzone
 
 NILVALUE = '-'
 
@@ -90,7 +89,7 @@ class Rfc5424SysLogHandler(SysLogHandler, object):
         if self.structured_data is None:
             self.structured_data = OrderedDict()
 
-        super().__init__(address, facility, socktype)
+        super(Rfc5424SysLogHandler).__init__(address, facility, socktype)
 
     def get_hostname(self, record):
         return getattr(record, 'hostname', self.hostname)
