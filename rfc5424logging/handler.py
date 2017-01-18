@@ -1,12 +1,10 @@
 import datetime
 import socket
-import os
-import sys
-from logging.handlers import SysLogHandler, SYSLOG_UDP_PORT
-from tzlocal import get_localzone
-from collections import OrderedDict
 from codecs import BOM_UTF8
-import datetime
+from collections import OrderedDict
+from logging.handlers import SysLogHandler, SYSLOG_UDP_PORT
+
+from tzlocal import get_localzone
 
 NILVALUE = '-'
 
