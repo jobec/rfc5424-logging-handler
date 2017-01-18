@@ -33,7 +33,7 @@ class Rfc5424SysLogHandler(SysLogHandler, object):
         a remote machine whose address is given by address in the form of a (host, port) tuple.
         If address is not specified, ('localhost', 514) is used. The address is used to open a
         socket. An alternative to providing a (host, port) tuple is providing an address as a
-        string, for example ‘/dev/log’. In this case, a Unix domain socket is used to send the
+        string, for example '/dev/log'. In this case, a Unix domain socket is used to send the
         message to the syslog. If facility is not specified, LOG_USER is used. The type of
         socket opened depends on the socktype argument, which defaults to socket.SOCK_DGRAM
         and thus opens a UDP socket. To open a TCP socket (for use with the newer syslog
@@ -41,8 +41,8 @@ class Rfc5424SysLogHandler(SysLogHandler, object):
 
         Note that if your server is not listening on UDP port 514, SysLogHandler may appear
         not to work. In that case, check what address you should be using for a domain socket
-        - it’s system dependent. For example, on Linux it’s usually ‘/dev/log’ but on OS/X
-        it’s ‘/var/run/syslog’. You’ll need to check your platform and use the appropriate
+        - it's system dependent. For example, on Linux it's usually '/dev/log' but on OS/X
+        it's '/var/run/syslog'. You'll need to check your platform and use the appropriate
         address (you may need to do this check at runtime if your application needs to run
         on several platforms). On Windows, you pretty much have to use the UDP option.
 

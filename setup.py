@@ -32,5 +32,9 @@ setup(
     install_requires=[
         'tzlocal',
     ],
+    test_suite='rfc5424logging.tests',
+    tests_require=[
+        'mock',
+    ],
     zip_safe=False,
 )

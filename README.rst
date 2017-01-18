@@ -37,7 +37,7 @@ After installing you can use this package like this:
     import logging
     from rfc5424logging import Rfc5424SysLogHandler
 
-    logger = logging.getLogger('systlogtest')
+    logger = logging.getLogger('syslogtest')
     logger.setLevel(logging.INFO)
 
     sh = Rfc5424SysLogHandler(address=('10.0.0.1', 514))
