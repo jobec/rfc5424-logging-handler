@@ -4,13 +4,15 @@ from unittest import TestCase
 
 from rfc5424logging import Rfc5424SysLogHandler, Rfc5424SysLogLogger
 
+logging.setLoggerClass(Rfc5424SysLogLogger)
+
 ADDRESS = '/var/run/syslog' if platform == 'darwin' else ('127.0.0.1', 514)
 
 
 class TestRfc5424(TestCase):
     def test_basic(self):
-        logger = Rfc5424SysLogLogger('syslogtest')
-        logger.setLevel(logging.INFO)
+        logger = logging.getLogger('syslogtest')
+        logger.setLevel(logging.DEBUG)
 
         sh = Rfc5424SysLogHandler(ADDRESS)
         logger.addHandler(sh)
@@ -18,8 +20,8 @@ class TestRfc5424(TestCase):
         logger.info('This is an {} message'.format(msg_type))
 
     def test_basic_msgid(self):
-        logger = Rfc5424SysLogLogger('syslogtest')
-        logger.setLevel(logging.INFO)
+        logger = logging.getLogger('syslogtest')
+        logger.setLevel(logging.DEBUG)
 
         sh = Rfc5424SysLogHandler(ADDRESS)
         logger.addHandler(sh)
@@ -27,8 +29,8 @@ class TestRfc5424(TestCase):
         logger.debug('This is an {} message with a msgid'.format(msg_type), msgid='TCPIN')
 
     def test_basic_structured_data(self):
-        logger = Rfc5424SysLogLogger('syslogtest')
-        logger.setLevel(logging.INFO)
+        logger = logging.getLogger('syslogtest')
+        logger.setLevel(logging.DEBUG)
 
         sh = Rfc5424SysLogHandler(ADDRESS)
         logger.addHandler(sh)
