@@ -49,3 +49,59 @@ After installing you can use this package like this:
 This will send the following message to the syslog server::
 
     <14>1 2020-01-01T05:10:20.841485+01:00 myserver syslogtest 5252 - - This is an interesting message
+
+
+Full blown example:
+
+.. code-block:: python
+
+    import logging
+    from rfc5424logging import Rfc5424SysLogHandler
+
+    logger = logging.getLogger('syslogtest')
+    logger.setLevel(logging.INFO)
+
+    sh = Rfc5424SysLogHandler(
+        address=('10.0.0.1', 514),
+        hostname="overridden_server_name",
+        appname="my_wonderfull_app",
+        procid=555,
+        structured_data={'sd_id_1': {'key1': 'value1'}},
+        enterprise_id=32473
+    )
+    logger.addHandler(sh)
+
+    msg_type = 'interesting'
+    extra = {
+        'msgid': 'some_unique_msgid',
+        'structured_data': {
+            'sd_id2': {'key2': 'value2', 'key3': 'value3'}
+        }
+    }
+    logger.info('This is an %s message', msg_type, extra=extra)
+
+That will send the following message to the syslog server::
+
+    <14>1 2020-01-01T05:10:20.841485+01:00 overridden_server_name my_wonderfull_app 555 some_unique_msgid [sd_id_1@32473 key1="value1"][sd_id2@32473 key3="value3" key2="value2"] This is an interesting message
+
+There's also an `LoggerAdapter` subclass available that makes it more easy to send structured data or a message ID with every message
+
+.. code-block:: python
+
+    import logging
+    from rfc5424logging import Rfc5424SysLogHandler, Rfc5424SysLogAdapter
+
+    logger = logging.getLogger('syslogtest')
+    logger.setLevel(logging.INFO)
+
+    sh = Rfc5424SysLogHandler(address=('10.0.0.1', 514))
+    logger.addHandler(sh)
+    adapter = Rfc5424SysLogAdapter(logger)
+
+    msg_type = 'interesting'
+    adapter.info('This is an %s message',
+                 msg_type, structured_data={'sd_id2': {'key2': 'value2', 'key3': 'value3'}})
+    adapter.info('This is an %s message', msg_type, msgid='some_unique_msgid')
+    adapter.info('This is an %s message',
+                 msg_type,
+                 structured_data={'sd_id2': {'key2': 'value2', 'key3': 'value3'}, msgid='some_unique_msgid')
