@@ -2,15 +2,18 @@ from mock import patch
 import logging
 from rfc5424logging import Rfc5424SysLogHandler
 from collections import OrderedDict
+import pytz
 
 address = ('127.0.0.1', 514)
+timezone = pytz.timezone('Antarctica/Vostok')
 
 class TestRfc5424UDP:
     @patch('logging.os.getpid', return_value=111)
     @patch('logging.time.time', return_value=946725071.111111)
+    @patch('rfc5424logging.handler.get_localzone', return_value=timezone)
     @patch('rfc5424logging.handler.socket.gethostname', return_value="testhostname")
-    def test_critical(self, mock_os, mock_time, mock_socket):
-        expected_msg = (b'<10>1 2000-01-01T12:11:11.111111+01:00 testhostname syslogtest 111'
+    def test_critical(self, mock_os, mock_time, mock_zone, mock_socket):
+        expected_msg = (b'<10>1 2000-01-01T17:11:11.111111+06:00 testhostname syslogtest 111'
                         b' - - \xef\xbb\xbfThis is an interesting message')
         logger = logging.getLogger('syslogtest')
         logger.setLevel(logging.DEBUG)
@@ -23,9 +26,10 @@ class TestRfc5424UDP:
 
     @patch('logging.os.getpid', return_value=111)
     @patch('logging.time.time', return_value=946725071.111111)
+    @patch('rfc5424logging.handler.get_localzone', return_value=timezone)
     @patch('rfc5424logging.handler.socket.gethostname', return_value="testhostname")
-    def test_error(self, mock_os, mock_time, mock_socket):
-        expected_msg = (b'<11>1 2000-01-01T12:11:11.111111+01:00 testhostname syslogtest 111'
+    def test_error(self, mock_os, mock_time, mock_zone, mock_socket):
+        expected_msg = (b'<11>1 2000-01-01T17:11:11.111111+06:00 testhostname syslogtest 111'
                         b' - - \xef\xbb\xbfThis is an interesting message')
         logger = logging.getLogger('syslogtest')
         logger.setLevel(logging.DEBUG)
@@ -38,9 +42,10 @@ class TestRfc5424UDP:
 
     @patch('logging.os.getpid', return_value=111)
     @patch('logging.time.time', return_value=946725071.111111)
+    @patch('rfc5424logging.handler.get_localzone', return_value=timezone)
     @patch('rfc5424logging.handler.socket.gethostname', return_value="testhostname")
-    def test_warning(self, mock_os, mock_time, mock_socket):
-        expected_msg = (b'<12>1 2000-01-01T12:11:11.111111+01:00 testhostname syslogtest 111'
+    def test_warning(self, mock_os, mock_time, mock_zone, mock_socket):
+        expected_msg = (b'<12>1 2000-01-01T17:11:11.111111+06:00 testhostname syslogtest 111'
                         b' - - \xef\xbb\xbfThis is an interesting message')
         logger = logging.getLogger('syslogtest')
         logger.setLevel(logging.DEBUG)
@@ -53,9 +58,10 @@ class TestRfc5424UDP:
 
     @patch('logging.os.getpid', return_value=111)
     @patch('logging.time.time', return_value=946725071.111111)
+    @patch('rfc5424logging.handler.get_localzone', return_value=timezone)
     @patch('rfc5424logging.handler.socket.gethostname', return_value="testhostname")
-    def test_info(self, mock_os, mock_time, mock_socket):
-        expected_msg = (b'<14>1 2000-01-01T12:11:11.111111+01:00 testhostname syslogtest 111'
+    def test_info(self, mock_os, mock_time, mock_zone, mock_socket):
+        expected_msg = (b'<14>1 2000-01-01T17:11:11.111111+06:00 testhostname syslogtest 111'
                         b' - - \xef\xbb\xbfThis is an interesting message')
         logger = logging.getLogger('syslogtest')
         logger.setLevel(logging.DEBUG)
@@ -68,9 +74,10 @@ class TestRfc5424UDP:
 
     @patch('logging.os.getpid', return_value=111)
     @patch('logging.time.time', return_value=946725071.111111)
+    @patch('rfc5424logging.handler.get_localzone', return_value=timezone)
     @patch('rfc5424logging.handler.socket.gethostname', return_value="testhostname")
-    def test_msgid(self, mock_os, mock_time, mock_socket):
-        expected_msg = (b'<14>1 2000-01-01T12:11:11.111111+01:00 testhostname syslogtest 111'
+    def test_msgid(self, mock_os, mock_time, mock_zone, mock_socket):
+        expected_msg = (b'<14>1 2000-01-01T17:11:11.111111+06:00 testhostname syslogtest 111'
                         b' SUPER_DUPER_ID - \xef\xbb\xbfThis is an interesting message')
         logger = logging.getLogger('syslogtest')
         logger.setLevel(logging.INFO)
@@ -83,9 +90,10 @@ class TestRfc5424UDP:
 
     @patch('logging.os.getpid', return_value=111)
     @patch('logging.time.time', return_value=946725071.111111)
+    @patch('rfc5424logging.handler.get_localzone', return_value=timezone)
     @patch('rfc5424logging.handler.socket.gethostname', return_value="testhostname")
-    def test_sd(self, mock_os, mock_time, mock_socket):
-        expected_msg = (b'<14>1 2000-01-01T12:11:11.111111+01:00 testhostname syslogtest 111'
+    def test_sd(self, mock_os, mock_time, mock_zone, mock_socket):
+        expected_msg = (b'<14>1 2000-01-01T17:11:11.111111+06:00 testhostname syslogtest 111'
                         b' - [my_sd_id@32473 my_key="my_value"] \xef\xbb\xbfThis is an interesting message')
         logger = logging.getLogger('syslogtest')
         logger.setLevel(logging.INFO)
@@ -108,9 +116,10 @@ class TestRfc5424UDP:
 
     @patch('logging.os.getpid', return_value=111)
     @patch('logging.time.time', return_value=946725071.111111)
+    @patch('rfc5424logging.handler.get_localzone', return_value=timezone)
     @patch('rfc5424logging.handler.socket.gethostname', return_value="testhostname")
-    def test_double_sd(self, mock_os, mock_time, mock_socket):
-        expected_msg = (b'<14>1 2000-01-01T12:11:11.111111+01:00 testhostname syslogtest 111'
+    def test_double_sd(self, mock_os, mock_time, mock_zone, mock_socket):
+        expected_msg = (b'<14>1 2000-01-01T17:11:11.111111+06:00 testhostname syslogtest 111'
                         b' - [my_sd_id@32473 my_key="my_value"][my_sd_id2@32473 my_key2="my_value2"]'
                         b' \xef\xbb\xbfThis is an interesting message')
         logger = logging.getLogger('syslogtest')
@@ -133,9 +142,10 @@ class TestRfc5424UDP:
 
     @patch('logging.os.getpid', return_value=111)
     @patch('logging.time.time', return_value=946725071.111111)
+    @patch('rfc5424logging.handler.get_localzone', return_value=timezone)
     @patch('rfc5424logging.handler.socket.gethostname', return_value="testhostname")
-    def test_sd_with_init_PEN(self, mock_os, mock_time, mock_socket):
-        expected_msg = (b'<14>1 2000-01-01T12:11:11.111111+01:00 testhostname syslogtest 111'
+    def test_sd_with_init_pen(self, mock_os, mock_time, mock_zone, mock_socket):
+        expected_msg = (b'<14>1 2000-01-01T17:11:11.111111+06:00 testhostname syslogtest 111'
                         b' - [my_sd_id@32473 my_key="my_value"] \xef\xbb\xbfThis is an interesting message')
         logger = logging.getLogger('syslogtest')
         logger.setLevel(logging.INFO)
@@ -158,9 +168,10 @@ class TestRfc5424UDP:
 
     @patch('logging.os.getpid', return_value=111)
     @patch('logging.time.time', return_value=946725071.111111)
+    @patch('rfc5424logging.handler.get_localzone', return_value=timezone)
     @patch('rfc5424logging.handler.socket.gethostname', return_value="testhostname")
-    def test_init_sd(self, mock_os, mock_time, mock_socket):
-        expected_msg = (b'<14>1 2000-01-01T12:11:11.111111+01:00 testhostname syslogtest 111'
+    def test_init_sd(self, mock_os, mock_time, mock_zone, mock_socket):
+        expected_msg = (b'<14>1 2000-01-01T17:11:11.111111+06:00 testhostname syslogtest 111'
                         b' - [my_sd_id@ my_key="my_value"] \xef\xbb\xbfThis is an interesting message')
         logger = logging.getLogger('syslogtest')
         logger.setLevel(logging.INFO)
@@ -174,9 +185,10 @@ class TestRfc5424UDP:
 
     @patch('logging.os.getpid', return_value=111)
     @patch('logging.time.time', return_value=946725071.111111)
+    @patch('rfc5424logging.handler.get_localzone', return_value=timezone)
     @patch('rfc5424logging.handler.socket.gethostname', return_value="testhostname")
-    def test_init_sd_and_msg_sd(self, mock_os, mock_time, mock_socket):
-        expected_msg = (b'<14>1 2000-01-01T12:11:11.111111+01:00 testhostname syslogtest 111'
+    def test_init_sd_and_msg_sd(self, mock_os, mock_time, mock_zone, mock_socket):
+        expected_msg = (b'<14>1 2000-01-01T17:11:11.111111+06:00 testhostname syslogtest 111'
                         b' - [my_sd_id@ my_key="my_value"][my_sd_id2@ my_key2="my_value2"]'
                         b' \xef\xbb\xbfThis is an interesting message')
         logger = logging.getLogger('syslogtest')
@@ -201,9 +213,10 @@ class TestRfc5424UDP:
 
     @patch('logging.os.getpid', return_value=111)
     @patch('logging.time.time', return_value=946725071.111111)
+    @patch('rfc5424logging.handler.get_localzone', return_value=timezone)
     @patch('rfc5424logging.handler.socket.gethostname', return_value="testhostname")
-    def test_init_sd_and_msg_sd_with_init_PEN(self, mock_os, mock_time, mock_socket):
-        expected_msg = (b'<14>1 2000-01-01T12:11:11.111111+01:00 testhostname syslogtest 111'
+    def test_init_sd_and_msg_sd_with_init_pen(self, mock_os, mock_time, mock_zone, mock_socket):
+        expected_msg = (b'<14>1 2000-01-01T17:11:11.111111+06:00 testhostname syslogtest 111'
                         b' - [my_sd_id@32473 my_key="my_value"][my_sd_id2@32473 my_key2="my_value2"]'
                         b' \xef\xbb\xbfThis is an interesting message')
         logger = logging.getLogger('syslogtest')
@@ -228,9 +241,10 @@ class TestRfc5424UDP:
 
     @patch('logging.os.getpid', return_value=111)
     @patch('logging.time.time', return_value=946725071.111111)
+    @patch('rfc5424logging.handler.get_localzone', return_value=timezone)
     @patch('rfc5424logging.handler.socket.gethostname', return_value="testhostname")
-    def test_appname(self, mock_os, mock_time, mock_socket):
-        expected_msg = (b'<14>1 2000-01-01T12:11:11.111111+01:00 testhostname my_appname 111'
+    def test_appname(self, mock_os, mock_time, mock_zone, mock_socket):
+        expected_msg = (b'<14>1 2000-01-01T17:11:11.111111+06:00 testhostname my_appname 111'
                         b' - - \xef\xbb\xbfThis is an interesting message')
         logger = logging.getLogger('syslogtest')
         logger.setLevel(logging.INFO)
@@ -243,9 +257,10 @@ class TestRfc5424UDP:
 
     @patch('logging.os.getpid', return_value=111)
     @patch('logging.time.time', return_value=946725071.111111)
+    @patch('rfc5424logging.handler.get_localzone', return_value=timezone)
     @patch('rfc5424logging.handler.socket.gethostname', return_value="testhostname")
-    def test_hostname(self, mock_os, mock_time, mock_socket):
-        expected_msg = (b'<14>1 2000-01-01T12:11:11.111111+01:00 my_hostname syslogtest 111'
+    def test_hostname(self, mock_os, mock_time, mock_zone, mock_socket):
+        expected_msg = (b'<14>1 2000-01-01T17:11:11.111111+06:00 my_hostname syslogtest 111'
                         b' - - \xef\xbb\xbfThis is an interesting message')
         logger = logging.getLogger('syslogtest')
         logger.setLevel(logging.INFO)
@@ -258,9 +273,10 @@ class TestRfc5424UDP:
 
     @patch('logging.os.getpid', return_value=111)
     @patch('logging.time.time', return_value=946725071.111111)
+    @patch('rfc5424logging.handler.get_localzone', return_value=timezone)
     @patch('rfc5424logging.handler.socket.gethostname', return_value="testhostname")
-    def test_procid(self, mock_os, mock_time, mock_socket):
-        expected_msg = (b'<14>1 2000-01-01T12:11:11.111111+01:00 testhostname syslogtest 1234'
+    def test_procid(self, mock_os, mock_time, mock_zone, mock_socket):
+        expected_msg = (b'<14>1 2000-01-01T17:11:11.111111+06:00 testhostname syslogtest 1234'
                         b' - - \xef\xbb\xbfThis is an interesting message')
         logger = logging.getLogger('syslogtest')
         logger.setLevel(logging.INFO)
