@@ -180,8 +180,9 @@ class Rfc5424SysLogHandler(SysLogHandler, object):
                 sd_id = '@'.join((sd_id, enterprise_id))
             sd_id = sd_id.encode('ascii', 'replace')[:32]
 
-            # build structed data element
-            sd_element = b''.join((b'[', sd_id, SP, cleaned_sd_params, b']'))
+            # build structured data element
+            spacer = SP if cleaned_sd_params else b''
+            sd_element = b''.join((b'[', sd_id, spacer, cleaned_sd_params, b']'))
             cleaned_structured_data.append(sd_element)
 
         if cleaned_structured_data:
@@ -198,7 +199,8 @@ class Rfc5424SysLogHandler(SysLogHandler, object):
         if self.socktype == socket.SOCK_STREAM:
             if self.framing == Rfc5424SysLogHandler.FRAMING_NON_TRANSPARENT:
                 msg = msg.replace(b'\n', b'\\n')
-                syslog_msg = SP.join((header, structured_data, msg, b'\n'))
+                syslog_msg = SP.join((header, structured_data, msg))
+                syslog_msg = b''.join((syslog_msg, b'\n'))
             else:
                 syslog_msg = SP.join((header, structured_data, msg))
                 syslog_msg = SP.join((str(len(syslog_msg)).encode('ascii'), syslog_msg))
