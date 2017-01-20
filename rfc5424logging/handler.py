@@ -113,7 +113,7 @@ class Rfc5424SysLogHandler(SysLogHandler, object):
         ent_id = getattr(record, 'enterprise_id', self.enterprise_id)
         if ent_id is None:
             ent_id = ''
-        return ent_id
+        return str(ent_id)
 
     def get_structured_data(self, record):
         structured_data = OrderedDict()
