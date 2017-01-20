@@ -104,4 +104,4 @@ There's also an `LoggerAdapter` subclass available that makes it more easy to se
     adapter.info('This is an %s message', msg_type, msgid='some_unique_msgid')
     adapter.info('This is an %s message',
                  msg_type,
-                 structured_data={'sd_id2': {'key2': 'value2', 'key3': 'value3'}, msgid='some_unique_msgid')
+                 structured_data={'sd_id2': {'key2': 'value2', 'key3': 'value3'}}, msgid='some_unique_msgid')
