@@ -34,5 +34,9 @@ setup(
     install_requires=[
         'tzlocal',
     ],
+    tests_require=[
+        'pytest',
+        'mock',
+    ],
     zip_safe=False,
 )

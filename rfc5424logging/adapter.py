@@ -6,13 +6,10 @@ class Rfc5424SysLogAdapter(logging.LoggerAdapter):
         super(Rfc5424SysLogAdapter, self).__init__(logger, extra or {})
 
     def process(self, msg, kwargs):
-        return msg, kwargs
-
-    def log(self, level, msg, *args, **kwargs):
         msgid = kwargs.pop('msgid', None)
         structured_data = kwargs.pop('structured_data', None)
 
-        if 'extra' not in kwargs:
+        if 'extra' not in kwargs and (msgid or structured_data):
             kwargs['extra'] = {}
 
         if msgid:
@@ -20,4 +17,4 @@ class Rfc5424SysLogAdapter(logging.LoggerAdapter):
         if structured_data:
             kwargs['extra']['structured_data'] = structured_data
 
-        super(Rfc5424SysLogAdapter, self).log(level, msg, *args, **kwargs)
+        return msg, kwargs

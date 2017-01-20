@@ -50,7 +50,7 @@ class TestRfc5424:
             adapter.info(
                 'This is an %s message',
                 msg_type,
-                structured_data= OrderedDict([
+                structured_data=OrderedDict([
                     ('my_sd_id@32473', {'my_key': 'my_value'}),
                     ('my_sd_id2@32473', {'my_key2': 'my_value2'})
                 ])

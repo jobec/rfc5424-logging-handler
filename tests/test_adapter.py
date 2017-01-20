@@ -11,7 +11,7 @@ timezone = pytz.timezone('Antarctica/Vostok')
 @patch('logging.time.time', return_value=946725071.111111)
 @patch('rfc5424logging.handler.get_localzone', return_value=timezone)
 @patch('rfc5424logging.handler.socket.gethostname', return_value="testhostname")
-class TestRfc5424UDP:
+class TestRfc5424:
     def test_info(self, *args):
         expected_msg = (b'<14>1 2000-01-01T17:11:11.111111+06:00 testhostname syslogtest 111'
                         b' - - \xef\xbb\xbfThis is an interesting message')

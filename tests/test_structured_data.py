@@ -12,7 +12,7 @@ timezone = pytz.timezone('Antarctica/Vostok')
 @patch('logging.time.time', return_value=946725071.111111)
 @patch('rfc5424logging.handler.get_localzone', return_value=timezone)
 @patch('rfc5424logging.handler.socket.gethostname', return_value="testhostname")
-class TestRfc5424UDP:
+class TestRfc5424:
     def test_double_sd(self, *args):
         expected_msg = (b'<14>1 2000-01-01T17:11:11.111111+06:00 testhostname syslogtest 111'
                         b' - [my_sd_id@32473 my_key="my_value"][my_sd_id2@32473 my_key2="my_value2"]'
