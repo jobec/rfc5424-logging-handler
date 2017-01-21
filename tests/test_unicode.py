@@ -22,7 +22,7 @@ class TestRfc5424:
         logger.addHandler(sh)
         with patch.object(sh, 'socket') as syslog_socket:
             logger.critical(u'This is a Δ message')
-            syslog_socket.sendto.assert_called_with(expected_msg, address)
+            syslog_socket.sendto.assert_called_once_with(expected_msg, address)
         logger.removeHandler(sh)
 
     def test_unicode_sd(self, *args):
@@ -39,7 +39,7 @@ class TestRfc5424:
                 msg_type,
                 extra={'structured_data': {'my_sd_id@32473': {'my_key': u'my_Δ_value'}}}
             )
-            syslog_socket.sendto.assert_called_with(expected_msg, address)
+            syslog_socket.sendto.assert_called_once_with(expected_msg, address)
         logger.removeHandler(sh)
 
     def test_unicode_hostname(self, *args):
@@ -52,7 +52,7 @@ class TestRfc5424:
         with patch.object(sh, 'socket') as syslog_socket:
             msg_type = 'interesting'
             logger.info('This is an %s message', msg_type)
-            syslog_socket.sendto.assert_called_with(expected_msg, address)
+            syslog_socket.sendto.assert_called_once_with(expected_msg, address)
         logger.removeHandler(sh)
 
     def test_unicode_appname(self, *args):
@@ -65,7 +65,7 @@ class TestRfc5424:
         with patch.object(sh, 'socket') as syslog_socket:
             msg_type = 'interesting'
             logger.info('This is an %s message', msg_type)
-            syslog_socket.sendto.assert_called_with(expected_msg, address)
+            syslog_socket.sendto.assert_called_once_with(expected_msg, address)
         logger.removeHandler(sh)
 
     def test_unicode_msgid(self, *args):
@@ -79,5 +79,5 @@ class TestRfc5424:
         with patch.object(sh, 'socket') as syslog_socket:
             msg_type = 'interesting'
             adapter.info('This is an %s message', msg_type, msgid=u'myΔmsgid')
-            syslog_socket.sendto.assert_called_with(expected_msg, address)
+            syslog_socket.sendto.assert_called_once_with(expected_msg, address)
         logger.removeHandler(sh)

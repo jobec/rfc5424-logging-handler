@@ -33,7 +33,29 @@ class TestRfc5424:
                     ('my_sd_id2@32473', {'my_key2': 'my_value2'})
                 ])
             )
-            syslog_socket.sendto.assert_called_with(expected_msg, address)
+            syslog_socket.sendto.assert_called_once_with(expected_msg, address)
+        logger.removeHandler(sh)
+
+    def test_alternate_sd(self, *args):
+        expected_msg = (b'<14>1 2000-01-01T17:11:11.111111+06:00 testhostname syslogtest 111'
+                        b' - [my_sd_id@32473 my_key="my_value"][my_sd_id2@32473 my_key2="my_value2"]'
+                        b' \xef\xbb\xbfThis is an interesting message')
+        logger = logging.getLogger('syslogtest')
+        logger.setLevel(logging.INFO)
+        sh = Rfc5424SysLogHandler(address=address)
+        logger.addHandler(sh)
+        adapter = Rfc5424SysLogAdapter(logger)
+        with patch.object(sh, 'socket') as syslog_socket:
+            msg_type = 'interesting'
+            adapter.info(
+                'This is an %s message',
+                msg_type,
+                sd=OrderedDict([
+                    ('my_sd_id@32473', {'my_key': 'my_value'}),
+                    ('my_sd_id2@32473', {'my_key2': 'my_value2'})
+                ])
+            )
+            syslog_socket.sendto.assert_called_once_with(expected_msg, address)
         logger.removeHandler(sh)
 
     def test_double_sd(self, *args):
@@ -55,7 +77,7 @@ class TestRfc5424:
                     ('my_sd_id2@32473', {'my_key2': 'my_value2'})
                 ])
             )
-            syslog_socket.sendto.assert_called_with(expected_msg, address)
+            syslog_socket.sendto.assert_called_once_with(expected_msg, address)
         logger.removeHandler(sh)
 
     def test_sd_with_init_pen(self, *args):
@@ -73,7 +95,7 @@ class TestRfc5424:
                 msg_type,
                 structured_data={'my_sd_id': {'my_key': 'my_value'}}
             )
-            syslog_socket.sendto.assert_called_with(expected_msg, address)
+            syslog_socket.sendto.assert_called_once_with(expected_msg, address)
         logger.removeHandler(sh)
 
     def test_init_sd(self, *args):
@@ -88,7 +110,7 @@ class TestRfc5424:
         with patch.object(sh, 'socket') as syslog_socket:
             msg_type = 'interesting'
             adapter.info('This is an %s message', msg_type)
-            syslog_socket.sendto.assert_called_with(expected_msg, address)
+            syslog_socket.sendto.assert_called_once_with(expected_msg, address)
         logger.removeHandler(sh)
 
     def test_init_sd_and_msg_sd(self, *args):
@@ -108,7 +130,7 @@ class TestRfc5424:
                 msg_type,
                 structured_data={'my_sd_id2': {'my_key2': 'my_value2'}}
             )
-            syslog_socket.sendto.assert_called_with(expected_msg, address)
+            syslog_socket.sendto.assert_called_once_with(expected_msg, address)
         logger.removeHandler(sh)
 
     def test_init_sd_and_msg_sd_with_init_pen(self, *args):
@@ -128,7 +150,7 @@ class TestRfc5424:
                 msg_type,
                 structured_data={'my_sd_id2': {'my_key2': 'my_value2'}}
             )
-            syslog_socket.sendto.assert_called_with(expected_msg, address)
+            syslog_socket.sendto.assert_called_once_with(expected_msg, address)
         logger.removeHandler(sh)
 
     def test_empty_sd(self, *args):
@@ -146,5 +168,5 @@ class TestRfc5424:
                 msg_type,
                 extra={'structured_data': {'my_sd_id': None}}
             )
-            syslog_socket.sendto.assert_called_with(expected_msg, address)
+            syslog_socket.sendto.assert_called_once_with(expected_msg, address)
         logger.removeHandler(sh)

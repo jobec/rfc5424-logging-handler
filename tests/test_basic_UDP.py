@@ -23,7 +23,20 @@ class TestRfc5424:
         with patch.object(sh, 'socket') as syslog_socket:
             msg_type = 'interesting'
             logger.info('This is an %s message', msg_type)
-            syslog_socket.sendto.assert_called_with(expected_msg, address)
+            syslog_socket.sendto.assert_called_once_with(expected_msg, address)
+        logger.removeHandler(sh)
+
+    def test_basic_from_logging(self, *args):
+        expected_msg = (b'<14>1 2000-01-01T17:11:11.111111+06:00 testhostname root 111'
+                        b' - - \xef\xbb\xbfThis is an interesting message')
+        logger = logging.getLogger()
+        logger.setLevel(logging.DEBUG)
+        sh = Rfc5424SysLogHandler(address=address)
+        logger.addHandler(sh)
+        with patch.object(sh, 'socket') as syslog_socket:
+            msg_type = 'interesting'
+            logging.info('This is an %s message', msg_type)
+            syslog_socket.sendto.assert_called_once_with(expected_msg, address)
         logger.removeHandler(sh)
 
     def test_log(self, *args):
@@ -36,7 +49,7 @@ class TestRfc5424:
         with patch.object(sh, 'socket') as syslog_socket:
             msg_type = 'interesting'
             logger.log(logging.INFO, 'This is an %s message', msg_type)
-            syslog_socket.sendto.assert_called_with(expected_msg, address)
+            syslog_socket.sendto.assert_called_once_with(expected_msg, address)
         logger.removeHandler(sh)
 
 
@@ -50,7 +63,7 @@ class TestRfc5424:
         with patch.object(sh, 'socket') as syslog_socket:
             msg_type = 'interesting'
             logger.info('This is an %s message', msg_type)
-            syslog_socket.sendto.assert_called_with(expected_msg, address)
+            syslog_socket.sendto.assert_called_once_with(expected_msg, address)
         logger.removeHandler(sh)
 
     def test_appname(self, *args):
@@ -63,7 +76,7 @@ class TestRfc5424:
         with patch.object(sh, 'socket') as syslog_socket:
             msg_type = 'interesting'
             logger.info('This is an %s message', msg_type)
-            syslog_socket.sendto.assert_called_with(expected_msg, address)
+            syslog_socket.sendto.assert_called_once_with(expected_msg, address)
         logger.removeHandler(sh)
 
     def test_procid(self, *args):
@@ -76,7 +89,7 @@ class TestRfc5424:
         with patch.object(sh, 'socket') as syslog_socket:
             msg_type = 'interesting'
             logger.info('This is an %s message', msg_type)
-            syslog_socket.sendto.assert_called_with(expected_msg, address)
+            syslog_socket.sendto.assert_called_once_with(expected_msg, address)
         logger.removeHandler(sh)
 
     def test_str_procid(self, *args):
@@ -89,7 +102,7 @@ class TestRfc5424:
         with patch.object(sh, 'socket') as syslog_socket:
             msg_type = 'interesting'
             logger.info('This is an %s message', msg_type)
-            syslog_socket.sendto.assert_called_with(expected_msg, address)
+            syslog_socket.sendto.assert_called_once_with(expected_msg, address)
         logger.removeHandler(sh)
 
     def test_msgid(self, *args):
@@ -102,7 +115,7 @@ class TestRfc5424:
         with patch.object(sh, 'socket') as syslog_socket:
             msg_type = 'interesting'
             logger.info('This is an %s message', msg_type, extra={'msgid': "SUPER_DUPER_ID"})
-            syslog_socket.sendto.assert_called_with(expected_msg, address)
+            syslog_socket.sendto.assert_called_once_with(expected_msg, address)
         logger.removeHandler(sh)
 
     def test_sd(self, *args):
@@ -119,5 +132,5 @@ class TestRfc5424:
                 msg_type,
                 extra={'structured_data': {'my_sd_id@32473': {'my_key': 'my_value'}}}
             )
-            syslog_socket.sendto.assert_called_with(expected_msg, address)
+            syslog_socket.sendto.assert_called_once_with(expected_msg, address)
         logger.removeHandler(sh)

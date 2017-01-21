@@ -30,7 +30,7 @@ class TestRfc5424:
         with patch.object(sh, 'socket', side_effect=connect_mock) as syslog_socket:
             msg_type = 'interesting'
             logger.info('This is an %s message', msg_type)
-            syslog_socket.sendall.assert_called_with(expected_msg)
+            syslog_socket.sendall.assert_called_once_with(expected_msg)
         logger.removeHandler(sh)
 
     def test_hostname(self, *args):
@@ -43,7 +43,7 @@ class TestRfc5424:
         with patch.object(sh, 'socket', side_effect=connect_mock) as syslog_socket:
             msg_type = 'interesting'
             logger.info('This is an %s message', msg_type)
-            syslog_socket.sendall.assert_called_with(expected_msg)
+            syslog_socket.sendall.assert_called_once_with(expected_msg)
         logger.removeHandler(sh)
 
     def test_appname(self, *args):
@@ -56,7 +56,7 @@ class TestRfc5424:
         with patch.object(sh, 'socket', side_effect=connect_mock) as syslog_socket:
             msg_type = 'interesting'
             logger.info('This is an %s message', msg_type)
-            syslog_socket.sendall.assert_called_with(expected_msg)
+            syslog_socket.sendall.assert_called_once_with(expected_msg)
         logger.removeHandler(sh)
 
     def test_procid(self, *args):
@@ -69,7 +69,7 @@ class TestRfc5424:
         with patch.object(sh, 'socket', side_effect=connect_mock) as syslog_socket:
             msg_type = 'interesting'
             logger.info('This is an %s message', msg_type)
-            syslog_socket.sendall.assert_called_with(expected_msg)
+            syslog_socket.sendall.assert_called_once_with(expected_msg)
         logger.removeHandler(sh)
 
     def test_msgid(self, *args):
@@ -82,7 +82,7 @@ class TestRfc5424:
         with patch.object(sh, 'socket', side_effect=connect_mock) as syslog_socket:
             msg_type = 'interesting'
             logger.info('This is an %s message', msg_type, extra={'msgid': "SUPER_DUPER_ID"})
-            syslog_socket.sendall.assert_called_with(expected_msg)
+            syslog_socket.sendall.assert_called_once_with(expected_msg)
         logger.removeHandler(sh)
 
     def test_sd(self, *args):
@@ -99,7 +99,7 @@ class TestRfc5424:
                 msg_type,
                 extra={'structured_data': {'my_sd_id@32473': {'my_key': 'my_value'}}}
             )
-            syslog_socket.sendall.assert_called_with(expected_msg)
+            syslog_socket.sendall.assert_called_once_with(expected_msg)
         logger.removeHandler(sh)
 
     def test_framing_octet_counting(self, *args):
@@ -114,5 +114,5 @@ class TestRfc5424:
         with patch.object(sh, 'socket', side_effect=connect_mock) as syslog_socket:
             msg_type = 'interesting'
             logger.info('This is an %s message', msg_type)
-            syslog_socket.sendall.assert_called_with(expected_msg)
+            syslog_socket.sendall.assert_called_once_with(expected_msg)
         logger.removeHandler(sh)
