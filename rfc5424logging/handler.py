@@ -14,14 +14,32 @@ SP = b' '
 REGISTERED_SD_IDs = ('timeQuality', 'origin', 'meta')
 SYSLOG_VERSION = '1'
 
+EMERGENCY = 70
+EMERG = EMERGENCY
+ALERT = 60
+NOTICE = 25
 
-class Rfc5424SysLogHandler(SysLogHandler, object):
+
+class Rfc5424SysLogHandler(SysLogHandler):
     """
     A handler class which sends RFC 5424 formatted logging records to a syslog server.
     """
     # RFC6587 framing
     FRAMING_OCTET_COUNTING = 1
     FRAMING_NON_TRANSPARENT = 2
+
+    # From the SysLogHandler class but extended with NOTICE, ALERT end EMERGENCY
+    priority_map = {
+        "DEBUG": "debug",
+        "INFO": "info",
+        "NOTICE": "notice",
+        "WARNING": "warning",
+        "ERROR": "error",
+        "CRITICAL": "critical",
+        "ALERT": "alert",
+        "EMERGENCY": "emerg",
+        "EMERG": "emerg",
+    }
 
     def __init__(self, address=('localhost', SYSLOG_UDP_PORT),
                  facility=SysLogHandler.LOG_USER,
