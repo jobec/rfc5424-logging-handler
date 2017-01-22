@@ -3,6 +3,8 @@ Python rfc5424 syslog logging handler
 
 .. image:: https://img.shields.io/pypi/v/rfc5424-logging-handler.svg
     :target: https://pypi.python.org/pypi/rfc5424-logging-handler
+.. image:: https://img.shields.io/pypi/pyversions/rfc5424-logging-handler.svg
+    :target: https://pypi.python.org/pypi/rfc5424-logging-handler#downloads
 .. image:: https://travis-ci.org/jobec/rfc5424-logging-handler.svg?branch=master
     :target: https://travis-ci.org/jobec/rfc5424-logging-handler
 .. image:: https://codecov.io/github/jobec/rfc5424-logging-handler/coverage.svg?branch=master
