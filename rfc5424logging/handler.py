@@ -85,7 +85,7 @@ class Rfc5424SysLogHandler(SysLogHandler):
             appname (str):
                 The name of the application. Defaults to the name of the logger that sent
                 the message.
-            procid (int):
+            procid (any):
                 The process ID of the sending application. Defaults to the `process` attribute
                 of the log record.
             structured_data (dict):
