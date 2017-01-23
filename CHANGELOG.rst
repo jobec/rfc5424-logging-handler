@@ -1,7 +1,7 @@
 Changelog
 ---------
 
-0.0.3 (unreleased)
+0.0.3 (2017-01-22)
 ~~~~~~~~~~~~~~~~~~
 
 * Adapter class to make it easier to log message IDs or structured data
