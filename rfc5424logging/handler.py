@@ -104,19 +104,22 @@ class Rfc5424SysLogHandler(SysLogHandler):
 
         if self.hostname is None:
             self.hostname = socket.gethostname()
-        if self.structured_data is None:
+        if not isinstance(self.structured_data, dict):
             self.structured_data = OrderedDict()
 
         super(Rfc5424SysLogHandler, self).__init__(address, facility, socktype)
 
     def get_hostname(self, record):
-        return getattr(record, 'hostname', self.hostname)
+        hostname = getattr(record, 'hostname', self.hostname)
+        if hostname is None:
+            hostname = NILVALUE
+        return str(hostname)
 
     def get_appname(self, record):
         if self.appname is not None:
-            return self.appname
+            return str(self.appname)
         else:
-            return getattr(record, 'name', NILVALUE)
+            return str(getattr(record, 'name', NILVALUE))
 
     def get_procid(self, record):
         if self.procid is not None:
@@ -125,13 +128,19 @@ class Rfc5424SysLogHandler(SysLogHandler):
             return str(getattr(record, 'process', NILVALUE))
 
     def get_msgid(self, record):
-        return getattr(record, 'msgid', NILVALUE)
+        msgid = getattr(record, 'msgid', NILVALUE)
+        if msgid is None:
+            msgid = NILVALUE
+        return str(msgid)
 
     def get_enterprise_id(self, record):
-        ent_id = getattr(record, 'enterprise_id', self.enterprise_id)
-        if ent_id is None:
-            ent_id = ''
-        return str(ent_id)
+        # We allow None to be returned here.
+        # We'll handle it when cleaning the structured data
+        enterprise_id = getattr(record, 'enterprise_id', self.enterprise_id)
+        if enterprise_id is None:
+            return None
+        else:
+            return str(enterprise_id)
 
     def get_structured_data(self, record):
         structured_data = OrderedDict()
@@ -146,88 +155,139 @@ class Rfc5424SysLogHandler(SysLogHandler):
         The record is formatted, and then sent to the syslog server. If
         exception information is present, it is NOT sent to the server.
         """
+        # The syslog message has the following ABNF [RFC5234] definition:
+        #
+        #     SYSLOG-MSG      = HEADER SP STRUCTURED-DATA [SP MSG]
+        #
+        #     HEADER          = PRI VERSION SP TIMESTAMP SP HOSTNAME
+        #                     SP APP-NAME SP PROCID SP MSGID
+        #     PRI             = "<" PRIVAL ">"
+        #     PRIVAL          = 1*3DIGIT ; range 0 .. 191
+        #     VERSION         = NONZERO-DIGIT 0*2DIGIT
+        #     HOSTNAME        = NILVALUE / 1*255PRINTUSASCII
+        #
+        #     APP-NAME        = NILVALUE / 1*48PRINTUSASCII
+        #     PROCID          = NILVALUE / 1*128PRINTUSASCII
+        #     MSGID           = NILVALUE / 1*32PRINTUSASCII
+        #
+        #     TIMESTAMP       = NILVALUE / FULL-DATE "T" FULL-TIME
+        #     FULL-DATE       = DATE-FULLYEAR "-" DATE-MONTH "-" DATE-MDAY
+        #     DATE-FULLYEAR   = 4DIGIT
+        #     DATE-MONTH      = 2DIGIT  ; 01-12
+        #     DATE-MDAY       = 2DIGIT  ; 01-28, 01-29, 01-30, 01-31 based on
+        #                             ; month/year
+        #     FULL-TIME       = PARTIAL-TIME TIME-OFFSET
+        #     PARTIAL-TIME    = TIME-HOUR ":" TIME-MINUTE ":" TIME-SECOND
+        #                     [TIME-SECFRAC]
+        #     TIME-HOUR       = 2DIGIT  ; 00-23
+        #     TIME-MINUTE     = 2DIGIT  ; 00-59
+        #     TIME-SECOND     = 2DIGIT  ; 00-59
+        #     TIME-SECFRAC    = "." 1*6DIGIT
+        #     TIME-OFFSET     = "Z" / TIME-NUMOFFSET
+        #     TIME-NUMOFFSET  = ("+" / "-") TIME-HOUR ":" TIME-MINUTE
+        #
+        #
+        #     STRUCTURED-DATA = NILVALUE / 1*SD-ELEMENT
+        #     SD-ELEMENT      = "[" SD-ID *(SP SD-PARAM) "]"
+        #     SD-PARAM        = PARAM-NAME "=" %d34 PARAM-VALUE %d34
+        #     SD-ID           = SD-NAME
+        #     PARAM-NAME      = SD-NAME
+        #     PARAM-VALUE     = UTF-8-STRING ; characters '"', '\' and
+        #                                  ; ']' MUST be escaped.
+        #     SD-NAME         = 1*32PRINTUSASCII
+        #                     ; except '=', SP, ']', %d34 (")
+        #
+        #     MSG             = MSG-ANY / MSG-UTF8
+        #     MSG-ANY         = *OCTET ; not starting with BOM
+        #     MSG-UTF8        = BOM UTF-8-STRING
+        #     BOM             = %xEF.BB.BF
 
-        # HEADER
-        pri = '<%d>' % self.encodePriority(self.facility,
-                                           self.mapPriority(record.levelname))
-        version = SYSLOG_VERSION
-        timestamp = datetime.datetime.fromtimestamp(record.created, get_localzone()).isoformat()
-        hostname = self.get_hostname(record)
-        appname = self.get_appname(record)
-        procid = self.get_procid(record)
-        msgid = self.get_msgid(record)
-
-        pri = pri.encode('ascii')
-        version = version.encode('ascii')
-        timestamp = timestamp.encode('ascii')
-        hostname = hostname.encode('ascii', 'replace')[:255]
-        appname = appname.encode('ascii', 'replace')[:48]
-        procid = procid.encode('ascii', 'replace')[:128]
-        msgid = msgid.encode('ascii', 'replace')[:32]
-
-        header = b''.join((pri, version, SP, timestamp, SP, hostname, SP, appname, SP, procid, SP, msgid))
-
-        # STRUCTURED-DATA
-        enterprise_id = self.get_enterprise_id(record)
-        structured_data = self.get_structured_data(record)
-        cleaned_structured_data = []
-        for sd_id, sd_params in list(structured_data.items()):
-            cleaned_sd_params = []
-            # ignore sd params not int key-value format
-            if isinstance(sd_params, dict):
-                sd_params = sd_params.items()
-            else:
-                sd_params = []
-
-            # Clean key-value pairs
-            for (param_name, param_value) in sd_params:
-                param_name = param_name.replace('=', '').replace(' ', '').replace(']', '').replace('"', '')
-                param_value = param_value.replace('\\', '\\\\').replace('"', '\\"').replace(']', '\\]')
-
-                param_name = param_name.encode('ascii', 'replace')[:32]
-                param_value = param_value.encode('utf-8')
-
-                sd_param = b''.join((param_name, b'="', param_value, b'"'))
-                cleaned_sd_params.append(sd_param)
-
-            cleaned_sd_params = SP.join(cleaned_sd_params)
-
-            # Clean structured data ID
-            sd_id = sd_id.replace('=', '').replace(' ', '').replace(']', '').replace('"', '')
-            if '@' not in sd_id and sd_id not in REGISTERED_SD_IDs:
-                sd_id = '@'.join((sd_id, enterprise_id))
-            sd_id = sd_id.encode('ascii', 'replace')[:32]
-
-            # build structured data element
-            spacer = SP if cleaned_sd_params else b''
-            sd_element = b''.join((b'[', sd_id, spacer, cleaned_sd_params, b']'))
-            cleaned_structured_data.append(sd_element)
-
-        if cleaned_structured_data:
-            structured_data = b''.join(cleaned_structured_data)
-        else:
-            structured_data = NILVALUE.encode('ascii')
-
-        # MSG
-        msg = self.format(record)
-        msg = b''.join((BOM_UTF8, msg.encode('utf-8')))
-
-        # SYSLOG-MSG
-        # with RFC6587 framing
-        if self.socktype == socket.SOCK_STREAM:
-            if self.framing == Rfc5424SysLogHandler.FRAMING_NON_TRANSPARENT:
-                msg = msg.replace(b'\n', b'\\n')
-                syslog_msg = SP.join((header, structured_data, msg))
-                syslog_msg = b''.join((syslog_msg, b'\n'))
-            else:
-                syslog_msg = SP.join((header, structured_data, msg))
-                syslog_msg = SP.join((str(len(syslog_msg)).encode('ascii'), syslog_msg))
-        else:
-            syslog_msg = SP.join((header, structured_data, msg))
-
-        # Off it goes
-        # Copied from SysLogHandler
         try:
+            # HEADER
+            pri = '<%d>' % self.encodePriority(self.facility,
+                                               self.mapPriority(record.levelname))
+            version = SYSLOG_VERSION
+            timestamp = datetime.datetime.fromtimestamp(record.created, get_localzone()).isoformat()
+            hostname = self.get_hostname(record)
+            appname = self.get_appname(record)
+            procid = self.get_procid(record)
+            msgid = self.get_msgid(record)
+
+            pri = pri.encode('ascii')
+            version = version.encode('ascii')
+            timestamp = timestamp.encode('ascii')
+            hostname = hostname.encode('ascii', 'replace')[:255]
+            appname = appname.encode('ascii', 'replace')[:48]
+            procid = procid.encode('ascii', 'replace')[:128]
+            msgid = msgid.encode('ascii', 'replace')[:32]
+
+            header = b''.join((pri, version, SP, timestamp, SP, hostname, SP, appname, SP, procid, SP, msgid))
+
+            # STRUCTURED-DATA
+            enterprise_id = self.get_enterprise_id(record)
+            structured_data = self.get_structured_data(record)
+            cleaned_structured_data = []
+            for sd_id, sd_params in list(structured_data.items()):
+                # Clean structured data ID
+                sd_id = str(sd_id).replace('=', '').replace(' ', '').replace(']', '').replace('"', '')
+                if '@' not in sd_id and sd_id not in REGISTERED_SD_IDs:
+                    if enterprise_id is None:
+                        raise ValueError("Enterprise ID has not been set. Cannot build structured data ID. "
+                                         "Please set a enterprise ID when initializing the logging handler "
+                                         "or include one in the structured data ID.")
+                    else:
+                        sd_id = '@'.join((sd_id, enterprise_id))
+                sd_id = sd_id.encode('ascii', 'replace')[:32]
+
+                cleaned_sd_params = []
+                # ignore sd params not int key-value format
+                if isinstance(sd_params, dict):
+                    sd_params = sd_params.items()
+                else:
+                    sd_params = []
+
+                # Clean key-value pairs
+                for (param_name, param_value) in sd_params:
+                    param_name = str(param_name).replace('=', '').replace(' ', '').replace(']', '').replace('"', '')
+                    param_value = str(param_value).replace('\\', '\\\\').replace('"', '\\"').replace(']', '\\]')
+
+                    param_name = param_name.encode('ascii', 'replace')[:32]
+                    param_value = param_value.encode('utf-8')
+
+                    sd_param = b''.join((param_name, b'="', param_value, b'"'))
+                    cleaned_sd_params.append(sd_param)
+
+                cleaned_sd_params = SP.join(cleaned_sd_params)
+
+                # build structured data element
+                spacer = SP if cleaned_sd_params else b''
+                sd_element = b''.join((b'[', sd_id, spacer, cleaned_sd_params, b']'))
+                cleaned_structured_data.append(sd_element)
+
+            if cleaned_structured_data:
+                structured_data = b''.join(cleaned_structured_data)
+            else:
+                structured_data = NILVALUE.encode('ascii')
+
+            # MSG
+            msg = self.format(record)
+            msg = b''.join((BOM_UTF8, msg.encode('utf-8')))
+
+            # SYSLOG-MSG
+            # with RFC6587 framing
+            if self.socktype == socket.SOCK_STREAM:
+                if self.framing == Rfc5424SysLogHandler.FRAMING_NON_TRANSPARENT:
+                    msg = msg.replace(b'\n', b'\\n')
+                    syslog_msg = SP.join((header, structured_data, msg))
+                    syslog_msg = b''.join((syslog_msg, b'\n'))
+                else:
+                    syslog_msg = SP.join((header, structured_data, msg))
+                    syslog_msg = SP.join((str(len(syslog_msg)).encode('ascii'), syslog_msg))
+            else:
+                syslog_msg = SP.join((header, structured_data, msg))
+
+            # Off it goes
+            # Copied from SysLogHandler
             if self.unixsocket:
                 try:
                     self.socket.send(syslog_msg)

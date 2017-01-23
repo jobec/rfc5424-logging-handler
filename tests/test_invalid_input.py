@@ -43,11 +43,30 @@ def test_long_procid(logger):
     logger.removeHandler(sh)
 
 
+def test_none_procid(logger):
+    expected_msg = (b'<14>1 2000-01-01T17:11:11.111111+06:00 testhostname root 111'
+                    b' - - \xef\xbb\xbfThis is an interesting message')
+    sh = Rfc5424SysLogHandler(address=address, procid=None)
+    logger.addHandler(sh)
+    with patch.object(sh, 'socket') as syslog_socket:
+        logger.info(message)
+        syslog_socket.sendto.assert_called_once_with(expected_msg, address)
+    logger.removeHandler(sh)
+
+
 def test_long_msgid(logger_with_udp_handler):
     expected_msg = (b'<14>1 2000-01-01T17:11:11.111111+06:00 testhostname root 111'
                     b' SUPER_LOOOOOOOOOOOOOOOOOOOOOOONG - \xef\xbb\xbfThis is an interesting message')
     logger, syslog_socket = logger_with_udp_handler
     logger.info(message, extra={'msgid': "SUPER_LOOOOOOOOOOOOOOOOOOOOOOONG_ID"})
+    syslog_socket.sendto.assert_called_once_with(expected_msg, address)
+
+
+def test_none_msgid(logger_with_udp_handler):
+    expected_msg = (b'<14>1 2000-01-01T17:11:11.111111+06:00 testhostname root 111'
+                    b' - - \xef\xbb\xbfThis is an interesting message')
+    logger, syslog_socket = logger_with_udp_handler
+    logger.info(message, extra={'msgid': None})
     syslog_socket.sendto.assert_called_once_with(expected_msg, address)
 
 
