@@ -1,13 +1,45 @@
-from mock import patch
 import logging
-from rfc5424logging import Rfc5424SysLogHandler, Rfc5424SysLogAdapter
+import socket
+from collections import OrderedDict
+from six import python_2_unicode_compatible
 import pytest
 import pytz
-import socket
+from mock import patch
+
+from rfc5424logging import Rfc5424SysLogHandler, Rfc5424SysLogAdapter
+
+
+class SomeClass:
+    def __init__(self):
+        self.a = "a"
+        self.b = 1
+
+    def __str__(self):
+        return "MyClass Object"
+
 
 address = ('127.0.0.1', 514)
 timezone = pytz.timezone('Antarctica/Vostok')
 message = 'This is an interesting message'
+
+sd1 = {'my_sd_id1@32473': {'my_key1': 'my_value1'}}
+sd2 = {'my_sd_id2@32473': {'my_key2': 'my_value2'}}
+sd_multi_id = OrderedDict()
+sd_multi_id.update(sd1)
+sd_multi_id.update(sd2)
+sd_multi_param = {'my_sd_id1@32473': OrderedDict([('my_key1', 'my_value1'), ('my_key2', 'my_value2')])}
+
+sd1_no_pen = {'my_sd_id1': {'my_key1': 'my_value1'}}
+sd2_no_pen = {'my_sd_id2': {'my_key2': 'my_value2'}}
+sd_multi_id_no_pen = OrderedDict()
+sd_multi_id_no_pen.update(sd1_no_pen)
+sd_multi_id_no_pen.update(sd2_no_pen)
+sd_multi_param_no_pen = {'my_sd_id1': OrderedDict([('my_key1', 'my_value1'), ('my_key2', 'my_value2')])}
+
+sd1_param_none_value = {'my_sd_id1@32473': {'my_key1': None}}
+sd1_param_object_value = {'my_sd_id1@32473': {'my_key1': SomeClass()}}
+sd1_param_none_key = {'my_sd_id1@32473': {None: 'my_value1'}}
+
 
 def connect_mock(param1):
     return
@@ -39,6 +71,7 @@ def logger():
         level_patch2 = patch.dict(logging._nameToLevel)
         level_patch2.start()
 
+    logging.raiseExceptions = True
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
     yield logger
