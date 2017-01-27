@@ -1,7 +1,13 @@
 Changelog
 ---------
 
-0.0.3 (2017-01-22)
+0.2.0 (2017-01-27)
+~~~~~~~~~~~~~~~~~~
+
+* Better input handling
+* Better sanitizing of invalid input
+
+0.1.0 (2017-01-22)
 ~~~~~~~~~~~~~~~~~~
 
 * Adapter class to make it easier to log message IDs or structured data
