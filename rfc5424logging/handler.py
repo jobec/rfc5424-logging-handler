@@ -1,6 +1,7 @@
 # coding=utf-8
 import datetime
 import socket
+import sys
 from codecs import BOM_UTF8
 from collections import OrderedDict
 from logging.handlers import SysLogHandler, SYSLOG_UDP_PORT
@@ -18,6 +19,8 @@ EMERGENCY = 70
 EMERG = EMERGENCY
 ALERT = 60
 NOTICE = 25
+
+PY2 = sys.version_info[0] == 2
 
 
 class Rfc5424SysLogHandler(SysLogHandler):
@@ -109,29 +112,39 @@ class Rfc5424SysLogHandler(SysLogHandler):
 
         super(Rfc5424SysLogHandler, self).__init__(address, facility, socktype)
 
+    @staticmethod
+    def filter_printusascii(str_to_filter):
+        return ''.join([x for x in str_to_filter if 33 <= ord(x) <= 126])
+
     def get_hostname(self, record):
         hostname = getattr(record, 'hostname', self.hostname)
-        if hostname is None:
+        if hostname is None or hostname == '':
             hostname = NILVALUE
-        return str(hostname)
+        return self.filter_printusascii(str(hostname))
 
     def get_appname(self, record):
-        if self.appname is not None:
-            return str(self.appname)
+        if self.appname is None:
+            appname = getattr(record, 'name', NILVALUE)
         else:
-            return str(getattr(record, 'name', NILVALUE))
+            appname = self.appname
+        if appname is None or appname == '':
+            appname = NILVALUE
+        return self.filter_printusascii(str(appname))
 
     def get_procid(self, record):
         if self.procid is not None:
-            return str(self.procid)
+            procid = self.procid
         else:
-            return str(getattr(record, 'process', NILVALUE))
+            procid = getattr(record, 'process', NILVALUE)
+        if procid is None or procid == '':
+            procid = NILVALUE
+        return self.filter_printusascii(str(procid))
 
     def get_msgid(self, record):
         msgid = getattr(record, 'msgid', NILVALUE)
-        if msgid is None:
+        if msgid is None or msgid == '':
             msgid = NILVALUE
-        return str(msgid)
+        return self.filter_printusascii(str(msgid))
 
     def get_enterprise_id(self, record):
         # We allow None to be returned here.
@@ -140,12 +153,15 @@ class Rfc5424SysLogHandler(SysLogHandler):
         if enterprise_id is None:
             return None
         else:
-            return str(enterprise_id)
+            return self.filter_printusascii(str(enterprise_id))
 
     def get_structured_data(self, record):
         structured_data = OrderedDict()
-        structured_data.update(self.structured_data)
-        structured_data.update(getattr(record, 'structured_data', {}))
+        if isinstance(self.structured_data, dict):
+            structured_data.update(self.structured_data)
+        record_sd = getattr(record, 'structured_data', {})
+        if isinstance(record_sd, dict):
+            structured_data.update(record_sd)
         return structured_data
 
     def emit(self, record):
@@ -201,6 +217,16 @@ class Rfc5424SysLogHandler(SysLogHandler):
         #     MSG-ANY         = *OCTET ; not starting with BOM
         #     MSG-UTF8        = BOM UTF-8-STRING
         #     BOM             = %xEF.BB.BF
+        #
+        #     UTF - 8 - STRING = *OCTET ; UTF - 8 string as specified
+        #                               ; in RFC 3629
+        #
+        #     OCTET = % d00 - 255
+        #     SP = % d32
+        #     PRINTUSASCII = % d33 - 126
+        #     NONZERO - DIGIT = % d49 - 57
+        #     DIGIT = % d48 / NONZERO - DIGIT
+        #     NILVALUE = "-"
 
         try:
             # HEADER
@@ -229,15 +255,23 @@ class Rfc5424SysLogHandler(SysLogHandler):
             cleaned_structured_data = []
             for sd_id, sd_params in list(structured_data.items()):
                 # Clean structured data ID
-                sd_id = str(sd_id).replace('=', '').replace(' ', '').replace(']', '').replace('"', '')
-                if '@' not in sd_id and sd_id not in REGISTERED_SD_IDs:
-                    if enterprise_id is None:
-                        raise ValueError("Enterprise ID has not been set. Cannot build structured data ID. "
-                                         "Please set a enterprise ID when initializing the logging handler "
-                                         "or include one in the structured data ID.")
-                    else:
-                        sd_id = '@'.join((sd_id, enterprise_id))
-                sd_id = sd_id.encode('ascii', 'replace')[:32]
+                sd_id = self.filter_printusascii(sd_id)
+                sd_id = sd_id.replace('=', '').replace(' ', '').replace(']', '').replace('"', '')
+                if '@' not in sd_id and sd_id not in REGISTERED_SD_IDs and enterprise_id is None:
+                    raise ValueError("Enterprise ID has not been set. Cannot build structured data ID. "
+                                     "Please set a enterprise ID when initializing the logging handler "
+                                     "or include one in the structured data ID.")
+                elif '@' in sd_id:
+                    sd_id, enterprise_id = sd_id.rsplit('@', 1)
+
+                if len(enterprise_id) > 30:
+                    raise ValueError("Enterprise ID is too long. Impossible to build structured data ID.")
+
+                sd_id = sd_id.replace('@', '')
+                if len(sd_id) + len(enterprise_id) > 32:
+                    sd_id = sd_id[:31 - len(enterprise_id)]
+                sd_id = '@'.join((sd_id, enterprise_id))
+                sd_id = sd_id.encode('ascii', 'replace')
 
                 cleaned_sd_params = []
                 # ignore sd params not int key-value format
@@ -248,11 +282,20 @@ class Rfc5424SysLogHandler(SysLogHandler):
 
                 # Clean key-value pairs
                 for (param_name, param_value) in sd_params:
-                    param_name = str(param_name).replace('=', '').replace(' ', '').replace(']', '').replace('"', '')
-                    param_value = str(param_value).replace('\\', '\\\\').replace('"', '\\"').replace(']', '\\]')
+                    param_name = self.filter_printusascii(str(param_name))
+                    param_name = param_name.replace('=', '').replace(' ', '').replace(']', '').replace('"', '')
+                    if param_value is None:
+                        param_value = ''
+
+                    param_value = str(param_value)
+
+                    if PY2:
+                        param_value = unicode(param_value, 'utf-8')  # noqa
+
+                    param_value = param_value.replace('\\', '\\\\').replace('"', '\\"').replace(']', '\\]')
 
                     param_name = param_name.encode('ascii', 'replace')[:32]
-                    param_value = param_value.encode('utf-8')
+                    param_value = param_value.encode('utf-8', 'replace')
 
                     sd_param = b''.join((param_name, b'="', param_value, b'"'))
                     cleaned_sd_params.append(sd_param)
