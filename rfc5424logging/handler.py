@@ -135,7 +135,7 @@ class Rfc5424SysLogHandler(SysLogHandler):
         if self.procid is not None:
             procid = self.procid
         else:
-            procid = getattr(record, 'process', NILVALUE)
+            procid = getattr(record, 'procid', None) or getattr(record, 'process', NILVALUE)
         if procid is None or procid == '':
             procid = NILVALUE
         return self.filter_printusascii(str(procid))
