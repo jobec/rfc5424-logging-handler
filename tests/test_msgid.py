@@ -7,7 +7,7 @@ from conftest import (
 )
 from mock import patch
 
-from rfc5424logging import Rfc5424SysLogHandler
+from rfc5424logging import Rfc5424SysLogHandler, NILVALUE
 
 
 @pytest.mark.parametrize("logger_kwargs,expected", [
@@ -21,6 +21,10 @@ from rfc5424logging import Rfc5424SysLogHandler
         b' - - \xef\xbb\xbfThis is an interesting message'
     ), (
         {'extra': {'msgid': None}},
+        b'<14>1 2000-01-01T17:11:11.111111+06:00 testhostname root 111'
+        b' - - \xef\xbb\xbfThis is an interesting message'
+    ), (
+        {'extra': {'msgid': NILVALUE}},
         b'<14>1 2000-01-01T17:11:11.111111+06:00 testhostname root 111'
         b' - - \xef\xbb\xbfThis is an interesting message'
     ), (

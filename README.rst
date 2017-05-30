@@ -117,6 +117,11 @@ There's also an `LoggerAdapter` subclass available that makes it more easy to se
                  msg_type,
                  structured_data={'sd_id2': {'key2': 'value2', 'key3': 'value3'}}, msgid='some_unique_msgid')
 
+    # Since version 1.0 it's also possible to override the appname, hostname and procid per message
+    adapter.info('Some other message',
+                 msgid='some_unique_msgid', appname="custom_appname",
+                 hostname="my_hostname", procid="5678")
+
 From a logging config dictionary
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -162,3 +167,40 @@ Below is an example using the rfc5424 log handler to log to syslog and the strea
     logger = logging.getLogger('syslogtest')
     logger.info('This message appears on console and is sent to syslog')
     logger.debug('This debug message appears on console only')
+
+Prevent a field from being sent
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+If you want the appname, hostname or procid field to be empty, instead of it being determined automatically, set it to
+NILVALUE explicitly. Setting it to `None` or an empty string will cause it to be filled automatically.
+
+.. code-block:: python
+
+    import logging
+    from rfc5424logging import Rfc5424SysLogHandler, NILVALUE
+
+    logger = logging.getLogger('syslogtest')
+    logger.setLevel(logging.INFO)
+
+    sh = Rfc5424SysLogHandler(
+        address=('10.0.0.1', 514),
+        hostname=NILVALUE,
+        appname=NILVALUE,
+        procid=NILVALUE,
+    )
+    logger.addHandler(sh)
+
+    logger.info('My syslog message')
+
+    msg_type = 'interesting'
+    extra = {
+        'msgid': 'some_unique_msgid',
+        'structured_data': {
+            'sd_id2': {'key2': 'value2', 'key3': 'value3'}
+        }
+    }
+    logger.info('This is an %s message', msg_type, extra=extra)
+
+That will send the following message to the syslog server::
+
+    <14>1 2020-01-01T05:10:20.841485+01:00 - - - - - My syslog message
+

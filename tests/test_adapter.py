@@ -6,7 +6,7 @@ from mock import patch
 from conftest import (
     address, message, sd1, sd2
 )
-from rfc5424logging import Rfc5424SysLogHandler, Rfc5424SysLogAdapter, NOTICE
+from rfc5424logging import Rfc5424SysLogHandler, Rfc5424SysLogAdapter, NOTICE, NILVALUE
 
 
 @pytest.mark.parametrize("handler_kwargs,adapter_kwargs,logger_kwargs,expected", [
@@ -30,6 +30,33 @@ from rfc5424logging import Rfc5424SysLogHandler, Rfc5424SysLogAdapter, NOTICE
         {'structured_data': sd2, 'msgid': 'my_msgid'},
         b'<14>1 2000-01-01T17:11:11.111111+06:00 my_hostname my_appname 1234'
         b' my_msgid [my_sd_id1@32473 my_key1="my_value1"][my_sd_id2@32473 my_key2="my_value2"] '
+        b'\xef\xbb\xbfThis is an interesting message'
+    ), (
+        {'address': address, 'structured_data': sd1, 'appname': 'my_appname', 'hostname': 'my_hostname', 'procid': "1234"},
+        {'enable_extra_levels': True},
+        {'procid': 'some_procid'},
+        b'<14>1 2000-01-01T17:11:11.111111+06:00 my_hostname my_appname some_procid'
+        b' - [my_sd_id1@32473 my_key1="my_value1"] '
+        b'\xef\xbb\xbfThis is an interesting message'
+    ), (
+        {'address': address, 'structured_data': sd1, 'appname': 'my_appname', 'hostname': 'my_hostname', 'procid': "1234"},
+        {'enable_extra_levels': True},
+        {'appname': 'some_appname'},
+        b'<14>1 2000-01-01T17:11:11.111111+06:00 my_hostname some_appname 1234'
+        b' - [my_sd_id1@32473 my_key1="my_value1"] '
+        b'\xef\xbb\xbfThis is an interesting message'
+    ), (
+        {'address': address, 'structured_data': sd1, 'appname': 'my_appname', 'hostname': 'my_hostname', 'procid': "1234"},
+        {'enable_extra_levels': True},
+        {'hostname': 'some_hostname'},
+        b'<14>1 2000-01-01T17:11:11.111111+06:00 some_hostname my_appname 1234'
+        b' - [my_sd_id1@32473 my_key1="my_value1"] '
+        b'\xef\xbb\xbfThis is an interesting message'
+    ), (
+        {'address': address},
+        {'enable_extra_levels': True},
+        {'hostname': NILVALUE, 'appname': NILVALUE, 'procid': NILVALUE},
+        b'<14>1 2000-01-01T17:11:11.111111+06:00 - - - - - '
         b'\xef\xbb\xbfThis is an interesting message'
     )
 ])

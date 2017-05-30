@@ -105,7 +105,7 @@ class Rfc5424SysLogHandler(SysLogHandler):
         self.enterprise_id = enterprise_id
         self.framing = framing
 
-        if self.hostname is None:
+        if self.hostname is None or self.hostname == '':
             self.hostname = socket.gethostname()
         if not isinstance(self.structured_data, dict):
             self.structured_data = OrderedDict()
@@ -123,21 +123,15 @@ class Rfc5424SysLogHandler(SysLogHandler):
         return self.filter_printusascii(str(hostname))
 
     def get_appname(self, record):
-        if self.appname is None:
-            appname = getattr(record, 'name', NILVALUE)
-        else:
-            appname = self.appname
+        appname = getattr(record, 'appname', self.appname)
         if appname is None or appname == '':
-            appname = NILVALUE
+            appname = getattr(record, 'name', NILVALUE)
         return self.filter_printusascii(str(appname))
 
     def get_procid(self, record):
-        if self.procid is not None:
-            procid = self.procid
-        else:
-            procid = getattr(record, 'procid', None) or getattr(record, 'process', NILVALUE)
+        procid = getattr(record, 'procid', self.procid)
         if procid is None or procid == '':
-            procid = NILVALUE
+            procid = getattr(record, 'process', NILVALUE)
         return self.filter_printusascii(str(procid))
 
     def get_msgid(self, record):

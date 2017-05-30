@@ -40,14 +40,24 @@ class Rfc5424SysLogAdapter(logging.LoggerAdapter):
         We don't touch other keyword arguments so we don't interfere with possible
         other logger adapters
         """
+        hostname = kwargs.pop('hostname', None)
+        appname = kwargs.pop('appname', None)
+        procid = kwargs.pop('procid', None)
         msgid = kwargs.pop('msgid', None)
         structured_data = kwargs.pop('sd', None)
+
         if structured_data is None:
             structured_data = kwargs.pop('structured_data', None)
 
-        if 'extra' not in kwargs and (msgid or structured_data):
+        if 'extra' not in kwargs:
             kwargs['extra'] = {}
 
+        if hostname:
+            kwargs['extra']['hostname'] = hostname
+        if appname:
+            kwargs['extra']['appname'] = appname
+        if procid:
+            kwargs['extra']['procid'] = procid
         if msgid:
             kwargs['extra']['msgid'] = msgid
         if structured_data:
