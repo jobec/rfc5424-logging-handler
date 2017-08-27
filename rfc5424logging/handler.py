@@ -48,7 +48,9 @@ class Rfc5424SysLogHandler(SysLogHandler):
                  facility=SysLogHandler.LOG_USER,
                  socktype=socket.SOCK_DGRAM,
                  framing=FRAMING_NON_TRANSPARENT,
-                 hostname=None, appname=None, procid=None, structured_data=None, enterprise_id=None):
+                 hostname=None, appname=None, procid=None,
+                 structured_data=None, enterprise_id=None,
+                 bom=True):
         """
         Returns a new instance of the Rfc5424SysLogHandler class intended to communicate with
         a remote machine whose address is given by address in the form of a (host, port) tuple.
@@ -97,6 +99,9 @@ class Rfc5424SysLogHandler(SysLogHandler):
             enterprise_id (int):
                 Then Private Enterprise Number. This is used to compose the structured data IDs when
                 they do not include an Enterprise ID and are not one of the reserved structured data IDs
+            bom (bool):
+                If the syslog application has a good indication that the content of the message
+                is encoded in UTF-8, then it should include the BOM.
         """
         self.hostname = hostname
         self.appname = appname
@@ -104,6 +109,7 @@ class Rfc5424SysLogHandler(SysLogHandler):
         self.structured_data = structured_data
         self.enterprise_id = enterprise_id
         self.framing = framing
+        self.bom = bom
 
         if self.hostname is None or self.hostname == '':
             self.hostname = socket.gethostname()
@@ -308,7 +314,10 @@ class Rfc5424SysLogHandler(SysLogHandler):
 
             # MSG
             msg = self.format(record)
-            msg = b''.join((BOM_UTF8, msg.encode('utf-8')))
+            if self.bom:
+                msg = b''.join((BOM_UTF8, msg.encode('utf-8')))
+            else:
+                msg = msg.encode('utf-8')
 
             # SYSLOG-MSG
             # with RFC6587 framing
