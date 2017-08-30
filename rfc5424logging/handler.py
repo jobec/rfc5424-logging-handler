@@ -47,8 +47,9 @@ class Rfc5424SysLogHandler(SysLogHandler):
     def __init__(self, address=('localhost', SYSLOG_UDP_PORT),
                  facility=SysLogHandler.LOG_USER,
                  socktype=socket.SOCK_DGRAM,
-                 framing=FRAMING_NON_TRANSPARENT,
-                 hostname=None, appname=None, procid=None, structured_data=None, enterprise_id=None):
+                 framing=FRAMING_NON_TRANSPARENT, msg_as_utf8=True,
+                 hostname=None, appname=None, procid=None,
+                 structured_data=None, enterprise_id=None):
         """
         Returns a new instance of the Rfc5424SysLogHandler class intended to communicate with
         a remote machine whose address is given by address in the form of a (host, port) tuple.
@@ -82,6 +83,11 @@ class Rfc5424SysLogHandler(SysLogHandler):
                 newline characters in the message and end the message with a newline character.
                 When set to FRAMING_OCTET_COUNTING, it will prepend the message length to the
                 begin of the message.
+            msg_as_utf8 (bool):
+                Controls the way the message is sent.
+                disabling this parameter sends the message as MSG-ANY (RFC2424 section 6), avoiding
+                issues with receivers that don't supporti the UTF-8 Byte Order Mark (BOM) at
+                the beginning of the message.
             hostname (str):
                 The hostname of the system where the message originated from.
                 Defaults to `socket.gethostname()`
@@ -104,6 +110,7 @@ class Rfc5424SysLogHandler(SysLogHandler):
         self.structured_data = structured_data
         self.enterprise_id = enterprise_id
         self.framing = framing
+        self.msg_as_utf8 = msg_as_utf8
 
         if self.hostname is None or self.hostname == '':
             self.hostname = socket.gethostname()
@@ -308,7 +315,10 @@ class Rfc5424SysLogHandler(SysLogHandler):
 
             # MSG
             msg = self.format(record)
-            msg = b''.join((BOM_UTF8, msg.encode('utf-8')))
+            if self.msg_as_utf8:
+                msg = b''.join((BOM_UTF8, msg.encode('utf-8')))
+            else:
+                msg = msg.encode('utf-8')
 
             # SYSLOG-MSG
             # with RFC6587 framing
