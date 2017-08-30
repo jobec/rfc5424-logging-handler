@@ -1,8 +1,8 @@
 Changelog
 ---------
 
-Unreleased
-~~~~~~~~~~
+1.0.1 (2017-08-30)
+~~~~~~~~~~~~~~~~~~
 
 * It's now possible to send syslog messages as `MSG-ANY <https://tools.ietf.org/html/rfc5424#section-6>`_
   which suppresses the UTF-8 byte order mark (BOM) when sending messages.
