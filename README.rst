@@ -32,8 +32,8 @@ Python package::
 Usage
 -----
 
-Basic
-~~~~~
+Basics
+~~~~~~
 
 After installing you can use this package like this:
 
@@ -53,8 +53,16 @@ After installing you can use this package like this:
 
 This will send the following message to the syslog server::
 
-    <14>1 2020-01-01T05:10:20.841485+01:00 myserver syslogtest 5252 - - This is an interesting message
+    <14>1 2020-01-01T05:10:20.841485+01:00 myserver syslogtest 5252 - - \xef\xbb\xbfThis is an interesting message
 
+Note the UTF8 Byte order mark (BOM) preceding the message. While required by
+`RFC 5424 section 6.4 <https://tools.ietf.org/html/rfc5424#section-6.4>`_ if the message is known to be UTF-8 encoded,
+there are still syslog receivers that cannot handle it. To bypass this limitation, set the ``msg_as_utf8`` parameter
+to ``False`` like this:
+
+.. code-block:: python
+
+    sh = Rfc5424SysLogHandler(address=('10.0.0.1', 514), msg_as_utf8=False)
 
 Extended
 ~~~~~~~~
@@ -90,7 +98,7 @@ Full blown example:
 
 That will send the following message to the syslog server::
 
-    <14>1 2020-01-01T05:10:20.841485+01:00 overridden_server_name my_wonderfull_app 555 some_unique_msgid [sd_id_1@32473 key1="value1"][sd_id2@32473 key3="value3" key2="value2"] This is an interesting message
+    <14>1 2020-01-01T05:10:20.841485+01:00 overridden_server_name my_wonderfull_app 555 some_unique_msgid [sd_id_1@32473 key1="value1"][sd_id2@32473 key3="value3" key2="value2"] \xef\xbb\xbfThis is an interesting message
 
 With logger adapter
 ~~~~~~~~~~~~~~~~~~~
