@@ -130,8 +130,8 @@ There's also an `LoggerAdapter` subclass available that makes it more easy to se
                  msgid='some_unique_msgid', appname="custom_appname",
                  hostname="my_hostname", procid="5678")
 
-From a logging config dictionary
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Using a logging config dictionary
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Python supports `configuring the logging system from a dictionary <https://docs.python.org/3/howto/logging-cookbook.html#an-example-dictionary-based-configuration>`_.
 Below is an example using the rfc5424 log handler to log to syslog and the stream handler to log to console.
