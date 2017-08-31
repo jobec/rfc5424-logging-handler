@@ -1,6 +1,13 @@
 Changelog
 ---------
 
+`1.0.2`_ - 2017/08/31
+~~~~~~~~~~~~~~~~~~~~~
+
+**Fixed**
+
+* Package description rendering on PyPi due to bug `pypa/wheel#189 <https://github.com/pypa/wheel/issues/189>`_
+
 `1.0.1`_ - 2017/08/30
 ~~~~~~~~~~~~~~~~~~~~~
 
@@ -50,6 +57,7 @@ Changelog
 
 * Initial release
 
+.. _1.0.2: https://github.com/jobec/rfc5424-logging-handler/compare/1.0.1...1.0.2
 .. _1.0.1: https://github.com/jobec/rfc5424-logging-handler/compare/1.0.0...1.0.1
 .. _1.0.0: https://github.com/jobec/rfc5424-logging-handler/compare/0.2.0...1.0.0
 .. _0.2.0: https://github.com/jobec/rfc5424-logging-handler/compare/0.1.0...0.2.0

@@ -7,13 +7,13 @@ with open('CHANGELOG.rst') as changelog_file:
 
 setup(
     name='rfc5424-logging-handler',
-    version='1.0.1',
+    version='1.0.2',
     packages=find_packages(),
     author='Joris Beckers',
     author_email='joris.beckers@gmail.com',
     url="https://github.com/jobec/rfc5424-logging-handler",
     download_url="https://pypi.python.org/pypi/rfc5424-logging-handler",
-    description='A more up-to-date, RFC5424-Compliant syslog handler for the Python logging framework',
+    description='An up-to-date, RFC5424-Compliant syslog handler for the Python logging framework',
     long_description=readme + '\n\n' + changelog,
     license="BSD",
     keywords='python logging handler syslog rfc5424',

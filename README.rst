@@ -10,7 +10,7 @@ Python rfc5424 syslog logging handler
 .. image:: https://codecov.io/github/jobec/rfc5424-logging-handler/coverage.svg?branch=master
     :target: https://codecov.io/github/jobec/rfc5424-logging-handler?branch=master
 
-A more up-to-date, `RFC 5424 <https://tools.ietf.org/html/rfc5424>`_ compliant syslog handler for the Python logging framework
+An up-to-date, `RFC 5424 <https://tools.ietf.org/html/rfc5424>`_ compliant syslog handler for the Python logging framework
 
 * Free software: BSD License
 * Homepage: https://github.com/jobec/rfc5424-logging-handler
