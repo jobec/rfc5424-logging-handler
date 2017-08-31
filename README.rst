@@ -100,8 +100,8 @@ That will send the following message to the syslog server::
 
     <14>1 2020-01-01T05:10:20.841485+01:00 overridden_server_name my_wonderfull_app 555 some_unique_msgid [sd_id_1@32473 key1="value1"][sd_id2@32473 key3="value3" key2="value2"] \xef\xbb\xbfThis is an interesting message
 
-With logger adapter
-~~~~~~~~~~~~~~~~~~~
+Using a logger adapter
+~~~~~~~~~~~~~~~~~~~~~~
 
 There's also an `LoggerAdapter` subclass available that makes it more easy to send structured data or a message ID with every message
 
@@ -178,6 +178,7 @@ Below is an example using the rfc5424 log handler to log to syslog and the strea
 
 Prevent a field from being sent
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 If you want the appname, hostname or procid field to be empty, instead of it being determined automatically, set it to
 NILVALUE explicitly. Setting it to `None` or an empty string will cause it to be filled automatically.
 
@@ -210,5 +211,5 @@ NILVALUE explicitly. Setting it to `None` or an empty string will cause it to be
 
 That will send the following message to the syslog server::
 
-    <14>1 2020-01-01T05:10:20.841485+01:00 - - - - - My syslog message
+    <14>1 2020-01-01T05:10:20.841485+01:00 - - - - - \xef\xbb\xbfMy syslog message
 
