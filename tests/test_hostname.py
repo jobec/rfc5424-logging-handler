@@ -45,8 +45,8 @@ from rfc5424logging import Rfc5424SysLogHandler, NILVALUE
         b'<14>1 2000-01-01T17:11:11.111111+06:00 1234 root 111'
         b' - - \xef\xbb\xbfThis is an interesting message'
     ), (
-        {'address': address, 'hostname': 'my_Δhost \nname'},
-        b'<14>1 2000-01-01T17:11:11.111111+06:00 my_hostname root 111'
+        {'address': address, 'hostname': 'my-Δhost \nname'},
+        b'<14>1 2000-01-01T17:11:11.111111+06:00 my-hostname root 111'
         b' - - \xef\xbb\xbfThis is an interesting message'
     ), (
         {'address': address, 'hostname': SomeClass()},
