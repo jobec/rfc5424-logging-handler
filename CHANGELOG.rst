@@ -1,6 +1,19 @@
 Changelog
 ---------
 
+`1.0.3`_ - 2017/10/08
+~~~~~~~~~~~~~~~~~~~~~
+
+No functional changes. Only documentation was changed.
+
+**Added**
+
+* Logstash configuration example for RFC5424.
+
+**Changed**
+
+* Moved most of the documentation out of the readme file.
+
 `1.0.2`_ - 2017/08/31
 ~~~~~~~~~~~~~~~~~~~~~
 
@@ -57,6 +70,7 @@ Changelog
 
 * Initial release
 
+.. _1.0.3: https://github.com/jobec/rfc5424-logging-handler/compare/1.0.2...1.0.3
 .. _1.0.2: https://github.com/jobec/rfc5424-logging-handler/compare/1.0.1...1.0.2
 .. _1.0.1: https://github.com/jobec/rfc5424-logging-handler/compare/1.0.0...1.0.1
 .. _1.0.0: https://github.com/jobec/rfc5424-logging-handler/compare/0.2.0...1.0.0
