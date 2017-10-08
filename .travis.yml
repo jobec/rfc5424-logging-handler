@@ -13,6 +13,8 @@ matrix:
           env: TOXENV=py36
         - python: 3.5
           env: TOXENV=flake8
+        - python: 3.5
+          env: TOXENV=docs
 
 # command to install dependencies for getting Tox running, other dependencies are installed by Tox
 before_install:
