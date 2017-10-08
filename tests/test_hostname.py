@@ -28,15 +28,15 @@ from rfc5424logging import Rfc5424SysLogHandler, NILVALUE
         b'<14>1 2000-01-01T17:11:11.111111+06:00 testhostname root 111'
         b' - - \xef\xbb\xbfThis is an interesting message'
     ), (
-        {'address': address, 'hostname': 'my_hostname'},
-        b'<14>1 2000-01-01T17:11:11.111111+06:00 my_hostname root 111'
+        {'address': address, 'hostname': 'my-hostname'},
+        b'<14>1 2000-01-01T17:11:11.111111+06:00 my-hostname root 111'
         b' - - \xef\xbb\xbfThis is an interesting message'
     ), (
-        {'address': address, 'hostname': 'my_loooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo'
+        {'address': address, 'hostname': 'my-loooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo'
                                          'oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo'
                                          'oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo'
-                                         'ooooooooooooooooooooooooong_hostname'},
-        b'<14>1 2000-01-01T17:11:11.111111+06:00 my_looooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo'
+                                         'ooooooooooooooooooooooooong-hostname'},
+        b'<14>1 2000-01-01T17:11:11.111111+06:00 my-looooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo'
         b'oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo'
         b'oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong root 111'
         b' - - \xef\xbb\xbfThis is an interesting message'
