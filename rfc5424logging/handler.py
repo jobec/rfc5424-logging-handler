@@ -316,24 +316,28 @@ class Rfc5424SysLogHandler(SysLogHandler):
                 structured_data = NILVALUE.encode('ascii')
 
             # MSG
-            msg = self.format(record)
-            if self.msg_as_utf8:
-                msg = b''.join((BOM_UTF8, msg.encode('utf-8')))
+            if record.msg is None or record.msg == "":
+                pieces = (header, structured_data)
             else:
-                msg = msg.encode('utf-8')
+                msg = self.format(record)
+                if self.msg_as_utf8:
+                    msg = b''.join((BOM_UTF8, msg.encode('utf-8')))
+                else:
+                    msg = msg.encode('utf-8')
+                pieces = (header, structured_data, msg)
 
             # SYSLOG-MSG
             # with RFC6587 framing
             if self.socktype == socket.SOCK_STREAM:
                 if self.framing == Rfc5424SysLogHandler.FRAMING_NON_TRANSPARENT:
-                    msg = msg.replace(b'\n', b'\\n')
-                    syslog_msg = SP.join((header, structured_data, msg))
+                    syslog_msg = SP.join(pieces)
+                    syslog_msg = syslog_msg.replace(b'\n', b'\\n')
                     syslog_msg = b''.join((syslog_msg, b'\n'))
                 else:
-                    syslog_msg = SP.join((header, structured_data, msg))
+                    syslog_msg = SP.join(pieces)
                     syslog_msg = SP.join((str(len(syslog_msg)).encode('ascii'), syslog_msg))
             else:
-                syslog_msg = SP.join((header, structured_data, msg))
+                syslog_msg = SP.join(pieces)
 
             # Off it goes
             # Copied from SysLogHandler
