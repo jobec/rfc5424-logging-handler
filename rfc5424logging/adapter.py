@@ -1,5 +1,6 @@
 import logging
 from .handler import NOTICE, EMERGENCY, ALERT
+from logging import CRITICAL, ERROR, WARNING, INFO, DEBUG
 
 
 class Rfc5424SysLogAdapter(logging.LoggerAdapter):
@@ -32,7 +33,7 @@ class Rfc5424SysLogAdapter(logging.LoggerAdapter):
 
         super(Rfc5424SysLogAdapter, self).__init__(logger, extra or {})
 
-    def process(self, msg, kwargs):
+    def process(self, msg=None, kwargs=None):
         """
         Searches for `msgid` and `sd` or `structured_data` in the keyword arguments
         and puts them in the `extra` keyword argument
@@ -65,7 +66,7 @@ class Rfc5424SysLogAdapter(logging.LoggerAdapter):
 
         return msg, kwargs
 
-    def log(self, level, msg, *args, **kwargs):
+    def log(self, level, msg=None, *args, **kwargs):
         # If custom levels are not enabled, we convert
         # the level to a standard one
         if not Rfc5424SysLogAdapter._extra_levels_enabled:
@@ -75,12 +76,28 @@ class Rfc5424SysLogAdapter(logging.LoggerAdapter):
                 level = logging.WARNING
         super(Rfc5424SysLogAdapter, self).log(level, msg, *args, **kwargs)
 
-    def emergency(self, msg, *args, **kwargs):
+    def emergency(self, msg=None, *args, **kwargs):
         self.log(EMERGENCY, msg, *args, **kwargs)
     emerg = emergency
 
-    def alert(self, msg, *args, **kwargs):
+    def alert(self, msg=None, *args, **kwargs):
         self.log(ALERT, msg, *args, **kwargs)
 
-    def notice(self, msg, *args, **kwargs):
+    def critical(self, msg=None, *args, **kwargs):
+        self.log(CRITICAL, msg, *args, **kwargs)
+
+    def error(self, msg=None, *args, **kwargs):
+        self.log(ERROR, msg, *args, **kwargs)
+
+    def warning(self, msg=None, *args, **kwargs):
+        self.log(WARNING, msg, *args, **kwargs)
+    warn = warning
+
+    def notice(self, msg=None, *args, **kwargs):
         self.log(NOTICE, msg, *args, **kwargs)
+
+    def info(self, msg=None, *args, **kwargs):
+        self.log(INFO, msg, *args, **kwargs)
+
+    def debug(self, msg=None, *args, **kwargs):
+        self.log(DEBUG, msg, *args, **kwargs)
