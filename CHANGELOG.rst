@@ -1,6 +1,19 @@
 Changelog
 ---------
 
+`1.1.0`_ - 2017/11/24
+~~~~~~~~~~~~~~~~~~~~~
+
+**Added**
+
+* The ``msg`` parameter for the logger handler can now be absent allowing "structured data only" messages.
+
+**Fixed**
+
+* Correct the automatic value of the ``hostname`` when the value is anything other then ``NILVALUE``
+* The syslog message is now empty in conformance with RFC5424 when it's value is ``None`` or an empty string.
+
+
 `1.0.3`_ - 2017/10/08
 ~~~~~~~~~~~~~~~~~~~~~
 
@@ -70,6 +83,7 @@ No functional changes. Only documentation was changed.
 
 * Initial release
 
+.. _1.1.0: https://github.com/jobec/rfc5424-logging-handler/compare/1.0.3...1.1.0
 .. _1.0.3: https://github.com/jobec/rfc5424-logging-handler/compare/1.0.2...1.0.3
 .. _1.0.2: https://github.com/jobec/rfc5424-logging-handler/compare/1.0.1...1.0.2
 .. _1.0.1: https://github.com/jobec/rfc5424-logging-handler/compare/1.0.0...1.0.1
