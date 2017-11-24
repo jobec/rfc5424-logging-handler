@@ -142,3 +142,47 @@ def test_notice_not_enabled(adapter_with_udp_handler):
     adapter, syslog_socket = adapter_with_udp_handler
     adapter.notice(message)
     syslog_socket.sendto.assert_called_once_with(expected_msg, address)
+
+
+def test_empty_msg(logger_with_udp_handler):
+    logger, syslog_socket = logger_with_udp_handler
+    adapter = Rfc5424SysLogAdapter(logger, enable_extra_levels=True)
+
+    expected_msg = b'<15>1 2000-01-01T17:11:11.111111+06:00 testhostname root 111 - -'
+    adapter.debug()
+    syslog_socket.sendto.assert_called_once_with(expected_msg, address)
+    syslog_socket.sendto.reset_mock()
+
+    expected_msg = b'<14>1 2000-01-01T17:11:11.111111+06:00 testhostname root 111 - -'
+    adapter.info()
+    syslog_socket.sendto.assert_called_once_with(expected_msg, address)
+    syslog_socket.sendto.reset_mock()
+
+    expected_msg = b'<13>1 2000-01-01T17:11:11.111111+06:00 testhostname root 111 - -'
+    adapter.notice()
+    syslog_socket.sendto.assert_called_once_with(expected_msg, address)
+    syslog_socket.sendto.reset_mock()
+
+    expected_msg = b'<12>1 2000-01-01T17:11:11.111111+06:00 testhostname root 111 - -'
+    adapter.warning()
+    syslog_socket.sendto.assert_called_once_with(expected_msg, address)
+    syslog_socket.sendto.reset_mock()
+
+    expected_msg = b'<11>1 2000-01-01T17:11:11.111111+06:00 testhostname root 111 - -'
+    adapter.error()
+    syslog_socket.sendto.assert_called_once_with(expected_msg, address)
+    syslog_socket.sendto.reset_mock()
+
+    expected_msg = b'<10>1 2000-01-01T17:11:11.111111+06:00 testhostname root 111 - -'
+    adapter.critical()
+    syslog_socket.sendto.assert_called_once_with(expected_msg, address)
+    syslog_socket.sendto.reset_mock()
+
+    expected_msg = b'<9>1 2000-01-01T17:11:11.111111+06:00 testhostname root 111 - -'
+    adapter.alert()
+    syslog_socket.sendto.assert_called_once_with(expected_msg, address)
+    syslog_socket.sendto.reset_mock()
+
+    expected_msg = b'<8>1 2000-01-01T17:11:11.111111+06:00 testhostname root 111 - -'
+    adapter.emergency()
+    syslog_socket.sendto.assert_called_once_with(expected_msg, address)

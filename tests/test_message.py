@@ -34,3 +34,14 @@ def test_msg_any(logger):
         syslog_socket.sendto.assert_called_once_with(expected, address)
         syslog_socket.sendto.reset_mock()
     logger.removeHandler(sh)
+
+
+def test_empty_msg(logger):
+    sh = Rfc5424SysLogHandler(address=address, msg_as_utf8=False)
+    logger.addHandler(sh)
+    with patch.object(sh, 'socket') as syslog_socket:
+        logger.info(None)
+        expected = b'<14>1 2000-01-01T17:11:11.111111+06:00 testhostname root 111 - -'
+        syslog_socket.sendto.assert_called_once_with(expected, address)
+        syslog_socket.sendto.reset_mock()
+    logger.removeHandler(sh)

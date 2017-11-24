@@ -37,7 +37,7 @@ No functional changes. Only documentation was changed.
 * `#10`_: Procid, appname and hostname can now be set per message, both with the handler as well as with the adapter
 
 .. note::
-   This release has a slight change in behaviour. Setting one of the appnama, hostname of procid message to None of an
+   This release has a slight change in behaviour. Setting one of the appnama, hostname of procid message to None or an
    empty string will cause it to be filled in automatically. Previously, setting it to an empty string caused it to
    be set to NILVALUE (a - ). You now need to set it explicilty to NILVALUE if you want to omit it from the message.
 
