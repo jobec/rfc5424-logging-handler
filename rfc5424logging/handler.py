@@ -124,7 +124,9 @@ class Rfc5424SysLogHandler(SysLogHandler):
         return ''.join([x for x in str_to_filter if 33 <= ord(x) <= 126])
 
     def get_hostname(self, record):
-        hostname = getattr(record, 'hostname', self.hostname)
+        hostname = getattr(record, 'hostname', None)
+        if not hostname:
+            hostname = self.hostname
         if hostname is None or hostname == '':
             hostname = NILVALUE
         return self.filter_printusascii(str(hostname))
