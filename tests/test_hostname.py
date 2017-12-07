@@ -54,7 +54,7 @@ from rfc5424logging import Rfc5424SysLogHandler, NILVALUE
         b' - - \xef\xbb\xbfThis is an interesting message'
     ),
 ])
-def test_hostname(logger, handler_kwargs, expected):
+def test_hostname_at_init(logger, handler_kwargs, expected):
     sh = Rfc5424SysLogHandler(**handler_kwargs)
     logger.addHandler(sh)
     with patch.object(sh, 'socket') as syslog_socket:
@@ -70,6 +70,7 @@ def test_hostname(logger, handler_kwargs, expected):
         syslog_socket.sendto.assert_called_once_with(expected, address)
         syslog_socket.sendto.reset_mock()
     logger.removeHandler(sh)
+
 
 @pytest.mark.parametrize("handler_kwargs,expected", [
     (
@@ -115,7 +116,7 @@ def test_hostname(logger, handler_kwargs, expected):
         b' - - \xef\xbb\xbfThis is an interesting message'
     ),
 ])
-def test_hostname2(logger, handler_kwargs, expected):
+def test_hostname_at_log(logger, handler_kwargs, expected):
     sh = Rfc5424SysLogHandler(handler_kwargs["address"])
     logger.addHandler(sh)
     with patch.object(sh, 'socket') as syslog_socket:

@@ -95,6 +95,11 @@ def test_procid(logger, handler_kwargs, expected):
         b'<14>1 2000-01-01T17:11:11.111111+06:00 testhostname root MyClassObject'
         b' - - \xef\xbb\xbfThis is an interesting message\n'
     ),
+    (
+        {'address': address, 'procid': SomeClass(), 'socktype': socket.SOCK_STREAM, "framing": Rfc5424SysLogHandler.FRAMING_OCTET_COUNTING},
+        b'108 <14>1 2000-01-01T17:11:11.111111+06:00 testhostname root MyClassObject'
+        b' - - \xef\xbb\xbfThis is an interesting message'
+    ),
 ])
 def test_procid_tcp(logger, handler_kwargs, expected):
     sh = Rfc5424SysLogHandler(**handler_kwargs)
