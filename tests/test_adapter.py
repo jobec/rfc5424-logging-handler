@@ -26,6 +26,20 @@ from rfc5424logging import Rfc5424SysLogHandler, Rfc5424SysLogAdapter, NOTICE, N
         b'\xef\xbb\xbfThis is an interesting message'
     ), (
         {'address': address, 'structured_data': sd1, 'appname': 'my_appname', 'hostname': 'my-hostname', 'procid': "1234"},
+        {'extra': {'structured_data': sd2, 'msgid': 'my_msgid'}},
+        {},
+        b'<14>1 2000-01-01T17:11:11.111111+06:00 my-hostname my_appname 1234'
+        b' my_msgid [my_sd_id1@32473 my_key1="my_value1"][my_sd_id2@32473 my_key2="my_value2"] '
+        b'\xef\xbb\xbfThis is an interesting message'
+    ), (
+        {'address': address, 'structured_data': sd1, 'appname': 'my_appname', 'hostname': 'my-hostname', 'procid': "1234"},
+        {'extra': {'structured_data': sd2, 'msgid': 'my_msgid'}, 'enable_extra_levels': True},
+        {},
+        b'<14>1 2000-01-01T17:11:11.111111+06:00 my-hostname my_appname 1234'
+        b' my_msgid [my_sd_id1@32473 my_key1="my_value1"][my_sd_id2@32473 my_key2="my_value2"] '
+        b'\xef\xbb\xbfThis is an interesting message'
+    ), (
+        {'address': address, 'structured_data': sd1, 'appname': 'my_appname', 'hostname': 'my-hostname', 'procid': "1234"},
         {'enable_extra_levels': True},
         {'structured_data': sd2, 'msgid': 'my_msgid'},
         b'<14>1 2000-01-01T17:11:11.111111+06:00 my-hostname my_appname 1234'

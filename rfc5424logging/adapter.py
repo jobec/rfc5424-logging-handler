@@ -52,6 +52,8 @@ class Rfc5424SysLogAdapter(logging.LoggerAdapter):
 
         if 'extra' not in kwargs:
             kwargs['extra'] = {}
+        for k, v in self.extra.items():
+            kwargs['extra'].setdefault(k, v)
 
         if hostname:
             kwargs['extra']['hostname'] = hostname
