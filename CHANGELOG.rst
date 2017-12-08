@@ -1,6 +1,13 @@
 Changelog
 ---------
 
+`1.1.1`_ - 2017/12/08
+~~~~~~~~~~~~~~~~~~~~~
+
+**Fixed**
+
+* `#14`_ Fixed handling of ``extra`` parameter in logging adapter.
+
 `1.1.0`_ - 2017/11/24
 ~~~~~~~~~~~~~~~~~~~~~
 
@@ -83,6 +90,7 @@ No functional changes. Only documentation was changed.
 
 * Initial release
 
+.. _1.1.1: https://github.com/jobec/rfc5424-logging-handler/compare/1.1.0...1.1.1
 .. _1.1.0: https://github.com/jobec/rfc5424-logging-handler/compare/1.0.3...1.1.0
 .. _1.0.3: https://github.com/jobec/rfc5424-logging-handler/compare/1.0.2...1.0.3
 .. _1.0.2: https://github.com/jobec/rfc5424-logging-handler/compare/1.0.1...1.0.2
@@ -92,6 +100,7 @@ No functional changes. Only documentation was changed.
 .. _0.1.0: https://github.com/jobec/rfc5424-logging-handler/compare/0.0.2...0.1.0
 .. _0.0.2: https://github.com/jobec/rfc5424-logging-handler/compare/0.0.1...0.0.2
 
+.. _#14: https://github.com/jobec/rfc5424-logging-handler/pull/14
 .. _#12: https://github.com/jobec/rfc5424-logging-handler/pull/12
 .. _#10: https://github.com/jobec/rfc5424-logging-handler/pull/10
 .. _#5: https://github.com/jobec/rfc5424-logging-handler/issues/5
