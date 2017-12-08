@@ -26,6 +26,20 @@ from rfc5424logging import Rfc5424SysLogHandler, Rfc5424SysLogAdapter, NOTICE, N
         b'\xef\xbb\xbfThis is an interesting message'
     ), (
         {'address': address, 'structured_data': sd1, 'appname': 'my_appname', 'hostname': 'my-hostname', 'procid': "1234"},
+        {'extra': {'structured_data': sd2, 'msgid': 'my_msgid'}},
+        {},
+        b'<14>1 2000-01-01T17:11:11.111111+06:00 my-hostname my_appname 1234'
+        b' my_msgid [my_sd_id1@32473 my_key1="my_value1"][my_sd_id2@32473 my_key2="my_value2"] '
+        b'\xef\xbb\xbfThis is an interesting message'
+    ), (
+        {'address': address, 'structured_data': sd1, 'appname': 'my_appname', 'hostname': 'my-hostname', 'procid': "1234"},
+        {'extra': {'structured_data': sd2, 'msgid': 'my_msgid'}, 'enable_extra_levels': True},
+        {},
+        b'<14>1 2000-01-01T17:11:11.111111+06:00 my-hostname my_appname 1234'
+        b' my_msgid [my_sd_id1@32473 my_key1="my_value1"][my_sd_id2@32473 my_key2="my_value2"] '
+        b'\xef\xbb\xbfThis is an interesting message'
+    ), (
+        {'address': address, 'structured_data': sd1, 'appname': 'my_appname', 'hostname': 'my-hostname', 'procid': "1234"},
         {'enable_extra_levels': True},
         {'structured_data': sd2, 'msgid': 'my_msgid'},
         b'<14>1 2000-01-01T17:11:11.111111+06:00 my-hostname my_appname 1234'
@@ -186,3 +200,10 @@ def test_empty_msg(logger_with_udp_handler):
     expected_msg = b'<8>1 2000-01-01T17:11:11.111111+06:00 testhostname root 111 - -'
     adapter.emergency()
     syslog_socket.sendto.assert_called_once_with(expected_msg, address)
+
+
+def test_extras(logger_with_udp_handler):
+    logger, syslog_socket = logger_with_udp_handler
+    adapter = Rfc5424SysLogAdapter(logger, enable_extra_levels=True, extra={"a": 1})
+    expected_return = ("aaaa", {'extra': dict(a=1, b=2)})
+    assert adapter.process("aaaa", kwargs={'extra': {"b": 2}}) == expected_return
