@@ -42,9 +42,9 @@ If you happen to have such configuration, feel free to open a pull request to ha
                                     sd_id = data[:sd_id].split("@", 2)[0]
                                     sd[sd_id] = {}
                                     next if data.nil? || data[:sd_params].nil?
-                                    data[:sd_params].scan(/(.*?[=]".*?[^\\]")/) do |set|
+                                    data[:sd_params].scan(/ (.*?[=](?:""|".*?[^\\]"))/) do |set|
                                         set = set[0].match(/(?<param_name>.*?)[=]\"(?<param_value>.*)\"/)
-                                        sd[sd_id][set[:param_name].lstrip] = set[:param_value]
+                                        sd[sd_id][set[:param_name]] = set[:param_value]
                                     end
                                 end
                                 sd
