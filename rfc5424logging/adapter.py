@@ -50,10 +50,9 @@ class Rfc5424SysLogAdapter(logging.LoggerAdapter):
         if structured_data is None:
             structured_data = kwargs.pop('structured_data', None)
 
-        if 'extra' not in kwargs:
-            kwargs['extra'] = {}
-        if self.extra:
-            kwargs['extra'].update(self.extra)
+        extra = self.extra.copy()
+        extra.update(kwargs['extra'] or {})
+        kwargs['extra'] = extra
 
         if hostname:
             kwargs['extra']['hostname'] = hostname

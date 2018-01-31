@@ -207,3 +207,5 @@ def test_extras(logger_with_udp_handler):
     adapter = Rfc5424SysLogAdapter(logger, enable_extra_levels=True, extra={"a": 1})
     expected_return = ("aaaa", {'extra': dict(a=1, b=2)})
     assert adapter.process("aaaa", kwargs={'extra': {"b": 2}}) == expected_return
+    expected_return = ("aaaa", {'extra': dict(a=11)})
+    assert adapter.process("aaaa", kwargs={'extra': {"a": 11}}) == expected_return
