@@ -344,7 +344,7 @@ class Rfc5424SysLogHandler(SysLogHandler):
             if self.unixsocket:
                 try:
                     self.socket.send(syslog_msg)
-                except OSError:
+                except (OSError, IOError):
                     self.socket.close()
                     self._connect_unixsocket(self.address)
                     self.socket.send(syslog_msg)
