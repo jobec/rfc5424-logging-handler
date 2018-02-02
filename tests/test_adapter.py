@@ -204,8 +204,12 @@ def test_empty_msg(logger_with_udp_handler):
 
 def test_extras(logger_with_udp_handler):
     logger, syslog_socket = logger_with_udp_handler
-    adapter = Rfc5424SysLogAdapter(logger, enable_extra_levels=True, extra={"a": 1})
-    expected_return = ("aaaa", {'extra': dict(a=1, b=2)})
-    assert adapter.process("aaaa", kwargs={'extra': {"b": 2}}) == expected_return
-    expected_return = ("aaaa", {'extra': dict(a=11)})
-    assert adapter.process("aaaa", kwargs={'extra': {"a": 11}}) == expected_return
+    adapter = Rfc5424SysLogAdapter(logger, enable_extra_levels=True, extra={"a": 1, "c": 3})
+    expected_return = ("aaaa", {'extra': dict(a=1, b=2, c="c")})
+    # Make sure passed extra argument overrides that of the adapter instance
+    assert adapter.process("aaaa", kwargs={'extra': {"b": 2, "c": "c"}}) == expected_return
+    # Make sure adapter instance variables aren't overwritten
+    assert {"a": 1, "c": 3} == adapter.extra
+    # Test invalid extra argument
+    with pytest.raises(TypeError):
+        adapter = Rfc5424SysLogAdapter(logger, enable_extra_levels=True, extra="i_am_not_a_dict")
