@@ -18,8 +18,10 @@ class Rfc5424SysLogAdapter(logging.LoggerAdapter):
         adapter = Rfc5424SysLogAdapter(someLogger, dict(p1=v1, p2="v2"))
 
         Args:
-            logger:
+            logger (logging.Logger):
                 A Logger class instance
+            extra (dict):
+                A Dictionary with with extra contextual information
             enable_extra_levels (bool):
                 Add custom log levels to the logging framework.
                 Use with caution because it can conflict with other packages defining custom levels.
@@ -30,6 +32,9 @@ class Rfc5424SysLogAdapter(logging.LoggerAdapter):
             logging.addLevelName(ALERT, 'ALERT')
             logging.addLevelName(NOTICE, 'NOTICE')
             Rfc5424SysLogAdapter._extra_levels_enabled = True
+
+        if extra is not None and not isinstance(extra, dict):
+            raise TypeError("Parameter extra must be a dictionary")
 
         super(Rfc5424SysLogAdapter, self).__init__(logger, extra or {})
 
@@ -50,10 +55,9 @@ class Rfc5424SysLogAdapter(logging.LoggerAdapter):
         if structured_data is None:
             structured_data = kwargs.pop('structured_data', None)
 
-        if 'extra' not in kwargs:
-            kwargs['extra'] = {}
-        if self.extra:
-            kwargs['extra'].update(self.extra)
+        extra = self.extra.copy()
+        extra.update(kwargs.get('extra', {}))
+        kwargs['extra'] = extra
 
         if hostname:
             kwargs['extra']['hostname'] = hostname
