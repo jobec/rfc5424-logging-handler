@@ -1,6 +1,15 @@
 Changelog
 ---------
 
+`1.1.2`_ - 2017/02/03
+~~~~~~~~~~~~~~~~~~~~~
+
+**Fixed**
+
+* `#15`_ When logging to ``/dev/log`` with python 2.7, the connection was permanently lost when the local syslog server
+  was restarted.
+* `#16`_ The ``extra`` info of a message did not overwrite that of the logging adapter instance.
+
 `1.1.1`_ - 2017/12/08
 ~~~~~~~~~~~~~~~~~~~~~
 
@@ -90,6 +99,7 @@ No functional changes. Only documentation was changed.
 
 * Initial release
 
+.. _1.1.2: https://github.com/jobec/rfc5424-logging-handler/compare/1.1.1...1.1.2
 .. _1.1.1: https://github.com/jobec/rfc5424-logging-handler/compare/1.1.0...1.1.1
 .. _1.1.0: https://github.com/jobec/rfc5424-logging-handler/compare/1.0.3...1.1.0
 .. _1.0.3: https://github.com/jobec/rfc5424-logging-handler/compare/1.0.2...1.0.3
@@ -100,6 +110,8 @@ No functional changes. Only documentation was changed.
 .. _0.1.0: https://github.com/jobec/rfc5424-logging-handler/compare/0.0.2...0.1.0
 .. _0.0.2: https://github.com/jobec/rfc5424-logging-handler/compare/0.0.1...0.0.2
 
+.. _#16: https://github.com/jobec/rfc5424-logging-handler/pull/16
+.. _#15: https://github.com/jobec/rfc5424-logging-handler/issues/15
 .. _#14: https://github.com/jobec/rfc5424-logging-handler/pull/14
 .. _#12: https://github.com/jobec/rfc5424-logging-handler/pull/12
 .. _#10: https://github.com/jobec/rfc5424-logging-handler/pull/10
