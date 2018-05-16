@@ -351,6 +351,12 @@ class Rfc5424SysLogHandler(SysLogHandler):
             elif self.socktype == socket.SOCK_DGRAM:
                 self.socket.sendto(syslog_msg, self.address)
             else:
-                self.socket.sendall(syslog_msg)
+                try:
+                    self.socket.sendall(syslog_msg)
+                except (OSError, IOError):
+                    self.socket.close()
+                    self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    self.socket.connect(self.address)
+                    self.socket.sendall(syslog_msg)
         except Exception:
             self.handleError(record)
