@@ -174,6 +174,13 @@ class Rfc5424SysLogHandler(SysLogHandler):
         The record is formatted, and then sent to the syslog server. If
         exception information is present, it is NOT sent to the server.
         """
+        try:
+            syslog_msg = self.construct_rfc5424_message(record)
+            self.send_to_socket(syslog_msg)
+        except Exception:
+            self.handleError(record)
+
+    def construct_rfc5424_message(self, record):
         # The syslog message has the following ABNF [RFC5234] definition:
         #
         #     SYSLOG-MSG      = HEADER SP STRUCTURED-DATA [SP MSG]
@@ -230,127 +237,122 @@ class Rfc5424SysLogHandler(SysLogHandler):
         #     NONZERO - DIGIT = % d49 - 57
         #     DIGIT = % d48 / NONZERO - DIGIT
         #     NILVALUE = "-"
+        pri = '<%d>' % self.encodePriority(self.facility,
+                                           self.mapPriority(record.levelname))
+        version = SYSLOG_VERSION
+        timestamp = datetime.datetime.fromtimestamp(record.created, get_localzone()).isoformat()
+        hostname = self.get_hostname(record)
+        appname = self.get_appname(record)
+        procid = self.get_procid(record)
+        msgid = self.get_msgid(record)
 
-        try:
-            # HEADER
-            pri = '<%d>' % self.encodePriority(self.facility,
-                                               self.mapPriority(record.levelname))
-            version = SYSLOG_VERSION
-            timestamp = datetime.datetime.fromtimestamp(record.created, get_localzone()).isoformat()
-            hostname = self.get_hostname(record)
-            appname = self.get_appname(record)
-            procid = self.get_procid(record)
-            msgid = self.get_msgid(record)
+        pri = pri.encode('ascii')
+        version = version.encode('ascii')
+        timestamp = timestamp.encode('ascii')
+        hostname = hostname.encode('ascii', 'replace')[:255]
+        appname = appname.encode('ascii', 'replace')[:48]
+        procid = procid.encode('ascii', 'replace')[:128]
+        msgid = msgid.encode('ascii', 'replace')[:32]
 
-            pri = pri.encode('ascii')
-            version = version.encode('ascii')
-            timestamp = timestamp.encode('ascii')
-            hostname = hostname.encode('ascii', 'replace')[:255]
-            appname = appname.encode('ascii', 'replace')[:48]
-            procid = procid.encode('ascii', 'replace')[:128]
-            msgid = msgid.encode('ascii', 'replace')[:32]
+        header = b''.join((pri, version, SP, timestamp, SP, hostname, SP, appname, SP, procid, SP, msgid))
 
-            header = b''.join((pri, version, SP, timestamp, SP, hostname, SP, appname, SP, procid, SP, msgid))
+        # STRUCTURED-DATA
+        enterprise_id = self.get_enterprise_id(record)
+        structured_data = self.get_structured_data(record)
+        cleaned_structured_data = []
+        for sd_id, sd_params in list(structured_data.items()):
+            # Clean structured data ID
+            sd_id = self.filter_printusascii(sd_id)
+            sd_id = sd_id.replace('=', '').replace(' ', '').replace(']', '').replace('"', '')
+            if '@' not in sd_id and sd_id not in REGISTERED_SD_IDs and enterprise_id is None:
+                raise ValueError("Enterprise ID has not been set. Cannot build structured data ID. "
+                                 "Please set a enterprise ID when initializing the logging handler "
+                                 "or include one in the structured data ID.")
+            elif '@' in sd_id:
+                sd_id, enterprise_id = sd_id.rsplit('@', 1)
 
-            # STRUCTURED-DATA
-            enterprise_id = self.get_enterprise_id(record)
-            structured_data = self.get_structured_data(record)
-            cleaned_structured_data = []
-            for sd_id, sd_params in list(structured_data.items()):
-                # Clean structured data ID
-                sd_id = self.filter_printusascii(sd_id)
-                sd_id = sd_id.replace('=', '').replace(' ', '').replace(']', '').replace('"', '')
-                if '@' not in sd_id and sd_id not in REGISTERED_SD_IDs and enterprise_id is None:
-                    raise ValueError("Enterprise ID has not been set. Cannot build structured data ID. "
-                                     "Please set a enterprise ID when initializing the logging handler "
-                                     "or include one in the structured data ID.")
-                elif '@' in sd_id:
-                    sd_id, enterprise_id = sd_id.rsplit('@', 1)
+            if len(enterprise_id) > 30:
+                raise ValueError("Enterprise ID is too long. Impossible to build structured data ID.")
 
-                if len(enterprise_id) > 30:
-                    raise ValueError("Enterprise ID is too long. Impossible to build structured data ID.")
+            sd_id = sd_id.replace('@', '')
+            if len(sd_id) + len(enterprise_id) > 32:
+                sd_id = sd_id[:31 - len(enterprise_id)]
+            sd_id = '@'.join((sd_id, enterprise_id))
+            sd_id = sd_id.encode('ascii', 'replace')
 
-                sd_id = sd_id.replace('@', '')
-                if len(sd_id) + len(enterprise_id) > 32:
-                    sd_id = sd_id[:31 - len(enterprise_id)]
-                sd_id = '@'.join((sd_id, enterprise_id))
-                sd_id = sd_id.encode('ascii', 'replace')
-
-                cleaned_sd_params = []
-                # ignore sd params not int key-value format
-                if isinstance(sd_params, dict):
-                    sd_params = sd_params.items()
-                else:
-                    sd_params = []
-
-                # Clean key-value pairs
-                for (param_name, param_value) in sd_params:
-                    param_name = self.filter_printusascii(str(param_name))
-                    param_name = param_name.replace('=', '').replace(' ', '').replace(']', '').replace('"', '')
-                    if param_value is None:
-                        param_value = ''
-
-                    param_value = str(param_value)
-
-                    if PY2:
-                        param_value = unicode(param_value, 'utf-8')  # noqa
-
-                    param_value = param_value.replace('\\', '\\\\').replace('"', '\\"').replace(']', '\\]')
-
-                    param_name = param_name.encode('ascii', 'replace')[:32]
-                    param_value = param_value.encode('utf-8', 'replace')
-
-                    sd_param = b''.join((param_name, b'="', param_value, b'"'))
-                    cleaned_sd_params.append(sd_param)
-
-                cleaned_sd_params = SP.join(cleaned_sd_params)
-
-                # build structured data element
-                spacer = SP if cleaned_sd_params else b''
-                sd_element = b''.join((b'[', sd_id, spacer, cleaned_sd_params, b']'))
-                cleaned_structured_data.append(sd_element)
-
-            if cleaned_structured_data:
-                structured_data = b''.join(cleaned_structured_data)
+            cleaned_sd_params = []
+            # ignore sd params not int key-value format
+            if isinstance(sd_params, dict):
+                sd_params = sd_params.items()
             else:
-                structured_data = NILVALUE.encode('ascii')
+                sd_params = []
 
-            # MSG
-            if record.msg is None or record.msg == "":
-                pieces = (header, structured_data)
+            # Clean key-value pairs
+            for (param_name, param_value) in sd_params:
+                param_name = self.filter_printusascii(str(param_name))
+                param_name = param_name.replace('=', '').replace(' ', '').replace(']', '').replace('"', '')
+                if param_value is None:
+                    param_value = ''
+
+                param_value = str(param_value)
+
+                if PY2:
+                    param_value = unicode(param_value, 'utf-8')  # noqa
+
+                param_value = param_value.replace('\\', '\\\\').replace('"', '\\"').replace(']', '\\]')
+
+                param_name = param_name.encode('ascii', 'replace')[:32]
+                param_value = param_value.encode('utf-8', 'replace')
+
+                sd_param = b''.join((param_name, b'="', param_value, b'"'))
+                cleaned_sd_params.append(sd_param)
+
+            cleaned_sd_params = SP.join(cleaned_sd_params)
+
+            # build structured data element
+            spacer = SP if cleaned_sd_params else b''
+            sd_element = b''.join((b'[', sd_id, spacer, cleaned_sd_params, b']'))
+            cleaned_structured_data.append(sd_element)
+
+        if cleaned_structured_data:
+            structured_data = b''.join(cleaned_structured_data)
+        else:
+            structured_data = NILVALUE.encode('ascii')
+
+        # MSG
+        if record.msg is None or record.msg == "":
+            pieces = (header, structured_data)
+        else:
+            msg = self.format(record)
+            if self.msg_as_utf8:
+                msg = b''.join((BOM_UTF8, msg.encode('utf-8')))
             else:
-                msg = self.format(record)
-                if self.msg_as_utf8:
-                    msg = b''.join((BOM_UTF8, msg.encode('utf-8')))
-                else:
-                    msg = msg.encode('utf-8')
-                pieces = (header, structured_data, msg)
+                msg = msg.encode('utf-8')
+            pieces = (header, structured_data, msg)
 
-            # SYSLOG-MSG
-            # with RFC6587 framing
-            if self.socktype == socket.SOCK_STREAM:
-                if self.framing == Rfc5424SysLogHandler.FRAMING_NON_TRANSPARENT:
-                    syslog_msg = SP.join(pieces)
-                    syslog_msg = syslog_msg.replace(b'\n', b'\\n')
-                    syslog_msg = b''.join((syslog_msg, b'\n'))
-                else:
-                    syslog_msg = SP.join(pieces)
-                    syslog_msg = SP.join((str(len(syslog_msg)).encode('ascii'), syslog_msg))
+        # SYSLOG-MSG
+        # with RFC6587 framing
+        if self.socktype == socket.SOCK_STREAM:
+            if self.framing == Rfc5424SysLogHandler.FRAMING_NON_TRANSPARENT:
+                syslog_msg = SP.join(pieces)
+                syslog_msg = syslog_msg.replace(b'\n', b'\\n')
+                syslog_msg = b''.join((syslog_msg, b'\n'))
             else:
                 syslog_msg = SP.join(pieces)
+                syslog_msg = SP.join((str(len(syslog_msg)).encode('ascii'), syslog_msg))
+        else:
+            syslog_msg = SP.join(pieces)
+        return syslog_msg
 
-            # Off it goes
-            # Copied from SysLogHandler
-            if self.unixsocket:
-                try:
-                    self.socket.send(syslog_msg)
-                except (OSError, IOError):
-                    self.socket.close()
-                    self._connect_unixsocket(self.address)
-                    self.socket.send(syslog_msg)
-            elif self.socktype == socket.SOCK_DGRAM:
-                self.socket.sendto(syslog_msg, self.address)
-            else:
-                self.socket.sendall(syslog_msg)
-        except Exception:
-            self.handleError(record)
+    def send_to_socket(self, syslog_msg):
+        if self.unixsocket:
+            try:
+                self.socket.send(syslog_msg)
+            except (OSError, IOError):
+                self.socket.close()
+                self._connect_unixsocket(self.address)
+                self.socket.send(syslog_msg)
+        elif self.socktype == socket.SOCK_DGRAM:
+            self.socket.sendto(syslog_msg, self.address)
+        else:
+            self.socket.sendall(syslog_msg)
