@@ -5,7 +5,7 @@ import ssl
 import sys
 from codecs import BOM_UTF8
 from collections import OrderedDict
-from logging.handlers import SysLogHandler, SYSLOG_UDP_PORT
+from logging.handlers import SysLogHandler, SYSLOG_UDP_PORT, SYSLOG_TCP_PORT
 
 from tzlocal import get_localzone
 from pytz import utc
@@ -373,7 +373,7 @@ class Rfc5424SysLogHandler(SysLogHandler):
 
 
 class TlsRfc5424SysLogHandler(Rfc5424SysLogHandler):
-    def __init__(self, address=('localhost', SYSLOG_UDP_PORT), facility=SysLogHandler.LOG_USER,
+    def __init__(self, address=('localhost', SYSLOG_TCP_PORT), facility=SysLogHandler.LOG_USER,
                  framing=Rfc5424SysLogHandler.FRAMING_NON_TRANSPARENT, msg_as_utf8=True,
                  hostname=None, appname=None, procid=None, structured_data=None, enterprise_id=None, ssl_timeout=3,
                  ssl_wrapper_kwargs=None):
