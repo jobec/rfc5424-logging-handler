@@ -7,7 +7,7 @@ __all__ = [
     'Rfc5424SysLogHandler',
     'Rfc5424SysLogAdapter',
     'TlsRfc5424SysLogHandler',
-    'EMERGENCY', 
+    'EMERGENCY',
     'ALERT',
     'NOTICE',
     'NILVALUE'
