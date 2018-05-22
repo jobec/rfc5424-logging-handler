@@ -430,7 +430,6 @@ class TlsRfc5424SysLogHandler(Rfc5424SysLogHandler):
         )
 
         self.ssl_wrapper_kwargs = ssl_wrapper_kwargs or {}
-
         self.socket.settimeout(ssl_timeout)
         self.socket = ssl.wrap_socket(self.socket, **self.ssl_wrapper_kwargs)
 
