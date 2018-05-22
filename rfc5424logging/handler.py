@@ -434,5 +434,3 @@ class TlsRfc5424SysLogHandler(Rfc5424SysLogHandler):
         self.socket.settimeout(ssl_timeout)
         self.socket = ssl.wrap_socket(self.socket, **self.ssl_wrapper_kwargs)
 
-    def send_to_socket(self, syslog_msg):
-        self.socket.sendall(syslog_msg)
