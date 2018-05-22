@@ -1,6 +1,7 @@
 # coding=utf-8
 from datetime import datetime
 import socket
+import ssl
 import sys
 from codecs import BOM_UTF8
 from collections import OrderedDict
@@ -369,3 +370,69 @@ class Rfc5424SysLogHandler(SysLogHandler):
             self.socket.sendto(syslog_msg, self.address)
         else:
             self.socket.sendall(syslog_msg)
+
+
+class TlsRfc5424SysLogHandler(Rfc5424SysLogHandler):
+    def __init__(self, address=('localhost', SYSLOG_UDP_PORT), facility=SysLogHandler.LOG_USER,
+                 framing=Rfc5424SysLogHandler.FRAMING_NON_TRANSPARENT, msg_as_utf8=True,
+                 hostname=None, appname=None, procid=None, structured_data=None, enterprise_id=None, ssl_timeout=3,
+                 ssl_wrapper_kwargs=None):
+        """An rfc5424-compliant logger that logs via TLS.
+
+        Args:
+            address (tuple):
+                address in the form of a (host, port) tuple
+            facility (int):
+                One of the Rfc5424SysLogHandler.LOG_* values.
+            framing (int):
+                One of the Rfc5424SysLogHandler.FRAMING_* values according to
+                RFC6587 section 3.4. Only applies when sockettype is socket.SOCK_STREAM (TCP)
+                and is used to give the syslog server an indication about the boundaries
+                of the message. Defaults to FRAMING_NON_TRANSPARENT which will escape all
+                newline characters in the message and end the message with a newline character.
+                When set to FRAMING_OCTET_COUNTING, it will prepend the message length to the
+                begin of the message.
+            msg_as_utf8 (bool):
+                Controls the way the message is sent.
+                disabling this parameter sends the message as MSG-ANY (RFC2424 section 6), avoiding
+                issues with receivers that don't supporti the UTF-8 Byte Order Mark (BOM) at
+                the beginning of the message.
+            hostname (str):
+                The hostname of the system where the message originated from.
+                Defaults to `socket.gethostname()`
+            appname (str):
+                The name of the application. Defaults to the name of the logger that sent
+                the message.
+            procid (any):
+                The process ID of the sending application. Defaults to the `process` attribute
+                of the log record.
+            structured_data (dict):
+                A dictionary with structured data that is added to every message. Per message your
+                can add more structured data by adding it to the `extra` argument of the log function.
+            enterprise_id (int):
+                Then Private Enterprise Number. This is used to compose the structured data IDs when
+                they do not include an Enterprise ID and are not one of the reserved structured data IDs
+            ssl_timeout(int): The timeout to set on the socket connection
+            ssl_wrapper_kwargs: Kwargs for ssl.wrap_socket()
+        """
+        assert isinstance(address, tuple), 'TLS communication requires the address to be a tuple of (host, port)'
+        super(TlsRfc5424SysLogHandler, self).__init__(
+            address=address,
+            facility=facility,
+            socktype=socket.SOCK_STREAM,
+            framing=framing,
+            msg_as_utf8=msg_as_utf8,
+            hostname=hostname,
+            appname=appname,
+            procid=procid,
+            structured_data=structured_data,
+            enterprise_id=enterprise_id
+        )
+
+        self.ssl_wrapper_kwargs = ssl_wrapper_kwargs or {}
+
+        self.socket.settimeout(ssl_timeout)
+        self.socket = ssl.wrap_socket(self.socket, **self.ssl_wrapper_kwargs)
+
+    def send_to_socket(self, syslog_msg):
+        self.socket.sendall(syslog_msg)
