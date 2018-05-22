@@ -1,13 +1,13 @@
 # coding=utf-8
 import datetime
 import socket
+import ssl
 import sys
 from codecs import BOM_UTF8
 from collections import OrderedDict
 from logging.handlers import SysLogHandler, SYSLOG_UDP_PORT
 
 from tzlocal import get_localzone
-import ssl
 
 NILVALUE = '-'
 
