@@ -280,7 +280,8 @@ class Rfc5424SysLogHandler(SysLogHandler):
                 sd_id = sd_id.replace('@', '')
                 if len(sd_id) + len(enterprise_id) > 32:
                     sd_id = sd_id[:31 - len(enterprise_id)]
-                sd_id = '@'.join((sd_id, enterprise_id))
+                if sd_id not in REGISTERED_SD_IDs:
+                    sd_id = '@'.join((sd_id, enterprise_id))
                 sd_id = sd_id.encode('ascii', 'replace')
 
                 cleaned_sd_params = []

@@ -123,7 +123,13 @@ from rfc5424logging import Rfc5424SysLogHandler
         b'<14>1 2000-01-01T17:11:11.111111+06:00 testhostname root 111'
         b' - [my_sdddddddddddddddddddddd@32473 my_key1="my_value1"]'
         b' \xef\xbb\xbfThis is an interesting message'
-    )
+    ), (  # 21
+        {'address': address, 'enterprise_id': 32473},
+        {'extra': {'structured_data': {'timeQuality': {'isSynced': '1'}}}},
+        b'<14>1 2000-01-01T17:11:11.111111+06:00 testhostname root 111'
+        b' - [timeQuality isSynced="1"]'
+        b' \xef\xbb\xbfThis is an interesting message'
+    ),
 ])
 def test_sd(logger, handler_kwargs, logger_kwargs, expected):
     sh = Rfc5424SysLogHandler(**handler_kwargs)
