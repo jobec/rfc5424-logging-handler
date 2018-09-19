@@ -133,6 +133,22 @@ That will send the following message to the syslog server::
 
     <14>1 2020-01-01T05:10:20.841485+01:00 - - - - - \xef\xbb\xbfMy syslog message
 
+Log in UTC time
+---------------
+
+Sometimes you have log sources all over the world in different timezones.
+In such a case it's sometimes easier to have all you timestamps in the UTC timezone.
+
+You can enable this by setting the ``utc_timestamp`` argument to ``True`` like this.
+
+.. code-block:: python
+
+    from rfc5424logging import Rfc5424SysLogHandler
+
+    sh = Rfc5424SysLogHandler(
+        address=('10.0.0.1', 514),
+        utc_timestamp=True
+    )
 
 Using a logging config dictionary
 ---------------------------------

@@ -1,5 +1,5 @@
 # coding=utf-8
-import datetime
+from datetime import datetime
 import socket
 import sys
 from codecs import BOM_UTF8
@@ -7,6 +7,7 @@ from collections import OrderedDict
 from logging.handlers import SysLogHandler, SYSLOG_UDP_PORT
 
 from tzlocal import get_localzone
+from pytz import utc
 
 NILVALUE = '-'
 
@@ -49,7 +50,7 @@ class Rfc5424SysLogHandler(SysLogHandler):
                  socktype=socket.SOCK_DGRAM,
                  framing=FRAMING_NON_TRANSPARENT, msg_as_utf8=True,
                  hostname=None, appname=None, procid=None,
-                 structured_data=None, enterprise_id=None):
+                 structured_data=None, enterprise_id=None, utc_timestamp=False):
         """
         Returns a new instance of the Rfc5424SysLogHandler class intended to communicate with
         a remote machine whose address is given by address in the form of a (host, port) tuple.
@@ -101,8 +102,10 @@ class Rfc5424SysLogHandler(SysLogHandler):
                 A dictionary with structured data that is added to every message. Per message your
                 can add more structured data by adding it to the `extra` argument of the log function.
             enterprise_id (int):
-                Then Private Enterprise Number. This is used to compose the structured data IDs when
+                The Private Enterprise Number. This is used to compose the structured data IDs when
                 they do not include an Enterprise ID and are not one of the reserved structured data IDs
+            utc_timestamp (bool):
+                Whether the timestamp should be converted to UTC time or kept in the local timezone
         """
         self.hostname = hostname
         self.appname = appname
@@ -111,6 +114,7 @@ class Rfc5424SysLogHandler(SysLogHandler):
         self.enterprise_id = enterprise_id
         self.framing = framing
         self.msg_as_utf8 = msg_as_utf8
+        self.utc_timestamp = utc_timestamp
 
         if self.hostname is None or self.hostname == '':
             self.hostname = socket.gethostname()
@@ -236,7 +240,10 @@ class Rfc5424SysLogHandler(SysLogHandler):
             pri = '<%d>' % self.encodePriority(self.facility,
                                                self.mapPriority(record.levelname))
             version = SYSLOG_VERSION
-            timestamp = datetime.datetime.fromtimestamp(record.created, get_localzone()).isoformat()
+            timestamp = datetime.fromtimestamp(record.created, get_localzone())
+            if self.utc_timestamp:
+                timestamp = timestamp.astimezone(utc)
+            timestamp = timestamp.isoformat()
             hostname = self.get_hostname(record)
             appname = self.get_appname(record)
             procid = self.get_procid(record)

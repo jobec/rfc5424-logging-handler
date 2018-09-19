@@ -34,6 +34,7 @@ setup(
     ],
     install_requires=[
         'tzlocal',
+        'pytz',
     ],
     tests_require=[
         'pytest',
