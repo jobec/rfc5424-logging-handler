@@ -1,6 +1,17 @@
 Changelog
 ---------
 
+`1.2.0`_ - 2018/09/21
+~~~~~~~~~~~~~~~~~~~~~
+
+**Fixed**
+
+* `#21`_ Registered structured data IDs where also suffixed with an enterprise ID.
+
+**Added**
+
+* `#22`_ Add ``utc_timestamp`` parameter to allow logging in UTC time.
+
 `1.1.2`_ - 2018/02/03
 ~~~~~~~~~~~~~~~~~~~~~
 
@@ -110,6 +121,8 @@ No functional changes. Only documentation was changed.
 .. _0.1.0: https://github.com/jobec/rfc5424-logging-handler/compare/0.0.2...0.1.0
 .. _0.0.2: https://github.com/jobec/rfc5424-logging-handler/compare/0.0.1...0.0.2
 
+.. _#22: https://github.com/jobec/rfc5424-logging-handler/issues/22
+.. _#21: https://github.com/jobec/rfc5424-logging-handler/issues/21
 .. _#16: https://github.com/jobec/rfc5424-logging-handler/pull/16
 .. _#15: https://github.com/jobec/rfc5424-logging-handler/issues/15
 .. _#14: https://github.com/jobec/rfc5424-logging-handler/pull/14

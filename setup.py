@@ -7,7 +7,7 @@ with open('CHANGELOG.rst') as changelog_file:
 
 setup(
     name='rfc5424-logging-handler',
-    version='1.1.2',
+    version='1.2.0',
     packages=find_packages(),
     author='Joris Beckers',
     author_email='joris.beckers@gmail.com',
