@@ -1,7 +1,7 @@
 Changelog
 ---------
 
-`1.2.0`_ - 2018/09/21
+`1.2.1`_ - 2018/09/21
 ~~~~~~~~~~~~~~~~~~~~~
 
 **Fixed**
@@ -110,6 +110,7 @@ No functional changes. Only documentation was changed.
 
 * Initial release
 
+.. _1.2.1: https://github.com/jobec/rfc5424-logging-handler/compare/1.1.2...1.2.1
 .. _1.1.2: https://github.com/jobec/rfc5424-logging-handler/compare/1.1.1...1.1.2
 .. _1.1.1: https://github.com/jobec/rfc5424-logging-handler/compare/1.1.0...1.1.1
 .. _1.1.0: https://github.com/jobec/rfc5424-logging-handler/compare/1.0.3...1.1.0
