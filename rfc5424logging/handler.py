@@ -1,14 +1,14 @@
 # coding=utf-8
-from datetime import datetime
 import socket
 import ssl
 import sys
 from codecs import BOM_UTF8
 from collections import OrderedDict
-from logging.handlers import SysLogHandler, SYSLOG_UDP_PORT, SYSLOG_TCP_PORT
+from datetime import datetime
+from logging.handlers import SysLogHandler, SYSLOG_UDP_PORT
 
-from tzlocal import get_localzone
 from pytz import utc
+from tzlocal import get_localzone
 
 NILVALUE = '-'
 
@@ -46,12 +46,27 @@ class Rfc5424SysLogHandler(SysLogHandler):
         "EMERG": "emerg",
     }
 
-    def __init__(self, address=('localhost', SYSLOG_UDP_PORT),
-                 facility=SysLogHandler.LOG_USER,
-                 socktype=socket.SOCK_DGRAM,
-                 framing=FRAMING_NON_TRANSPARENT, msg_as_utf8=True,
-                 hostname=None, appname=None, procid=None,
-                 structured_data=None, enterprise_id=None, utc_timestamp=False):
+    def __init__(
+            self,
+            address=('localhost', SYSLOG_UDP_PORT),
+            facility=SysLogHandler.LOG_USER,
+            socktype=socket.SOCK_DGRAM,
+            framing=FRAMING_NON_TRANSPARENT,
+            msg_as_utf8=True,
+            hostname=None,
+            appname=None,
+            procid=None,
+            structured_data=None,
+            enterprise_id=None,
+            utc_timestamp=False,
+            timeout=5,
+            tls_enable=False,
+            tls_ca_bundle=None,
+            tls_verify=True,
+            tls_client_cert=None,
+            tls_client_key=None,
+            tls_key_password=None,
+    ):
         """
         Returns a new instance of the Rfc5424SysLogHandler class intended to communicate with
         a remote machine whose address is given by address in the form of a (host, port) tuple.
@@ -88,7 +103,7 @@ class Rfc5424SysLogHandler(SysLogHandler):
             msg_as_utf8 (bool):
                 Controls the way the message is sent.
                 disabling this parameter sends the message as MSG-ANY (RFC2424 section 6), avoiding
-                issues with receivers that don't supporti the UTF-8 Byte Order Mark (BOM) at
+                issues with receivers that don't support the UTF-8 Byte Order Mark (BOM) at
                 the beginning of the message.
             hostname (str):
                 The hostname of the system where the message originated from.
@@ -107,7 +122,27 @@ class Rfc5424SysLogHandler(SysLogHandler):
                 they do not include an Enterprise ID and are not one of the reserved structured data IDs
             utc_timestamp (bool):
                 Whether the timestamp should be converted to UTC time or kept in the local timezone
+            timeout (int):
+                Sets the timeout on the connection to the server.
+            tls_enable (bool):
+                If set to `True`, it sets up a TLS/SSL connection to the address specified in `address`
+                over which the syslog messages will be sent.
+                Default to `False`
+            tls_ca_bundle (str):
+                The path to a bundle of CA certificates used for validating the remote server's identity.
+                If set to `None`, it will try to load the default CA as described in
+                https://docs.python.org/3/library/ssl.html#ssl.SSLContext.load_verify_locations
+            tls_verify (bool):
+                Whether to verify the certificate of the server.
+            tls_client_cert (str):
+                path to a file containing a client certificate.
+            tls_client_key (str):
+                Path to a file contianing the client private key.
+            tls_key_password (str):
+                Optionally the password for decrypting the specified private key.
         """
+        super(Rfc5424SysLogHandler, self).__init__(address, facility, socktype)
+
         self.hostname = hostname
         self.appname = appname
         self.procid = procid
@@ -122,7 +157,18 @@ class Rfc5424SysLogHandler(SysLogHandler):
         if not isinstance(self.structured_data, dict):
             self.structured_data = OrderedDict()
 
-        super(Rfc5424SysLogHandler, self).__init__(address, facility, socktype)
+        self.socket.settimeout(timeout)
+
+        if tls_enable:
+            assert socktype == socket.SOCK_STREAM, 'Enabling TLS requires the socket type to be socket.SOCK_STREAM'
+            assert isinstance(address, tuple), 'TLS communication requires the address to be a tuple of (host, port)'
+
+            context = ssl.create_default_context(purpose=ssl.Purpose.SERVER_AUTH, cafile=tls_ca_bundle)
+            context.verify_mode = ssl.CERT_REQUIRED if tls_verify else ssl.CERT_NONE
+            server_hostname, port = address
+            if tls_client_cert:
+                context.load_cert_chain(tls_client_cert, tls_client_key, tls_key_password)
+            self.socket = context.wrap_socket(self.socket, server_hostname=server_hostname)
 
     @staticmethod
     def filter_printusascii(str_to_filter):
@@ -179,13 +225,6 @@ class Rfc5424SysLogHandler(SysLogHandler):
         The record is formatted, and then sent to the syslog server. If
         exception information is present, it is NOT sent to the server.
         """
-        try:
-            syslog_msg = self.construct_rfc5424_message(record)
-            self.send_to_socket(syslog_msg)
-        except Exception:
-            self.handleError(record)
-
-    def construct_rfc5424_message(self, record):
         # The syslog message has the following ABNF [RFC5234] definition:
         #
         #     SYSLOG-MSG      = HEADER SP STRUCTURED-DATA [SP MSG]
@@ -243,192 +282,130 @@ class Rfc5424SysLogHandler(SysLogHandler):
         #     DIGIT = % d48 / NONZERO - DIGIT
         #     NILVALUE = "-"
 
-        # HEADER
-        pri = '<%d>' % self.encodePriority(self.facility,
-                                           self.mapPriority(record.levelname))
-        version = SYSLOG_VERSION
-        timestamp = datetime.fromtimestamp(record.created, get_localzone())
-        if self.utc_timestamp:
-            timestamp = timestamp.astimezone(utc)
-        timestamp = timestamp.isoformat()
-        hostname = self.get_hostname(record)
-        appname = self.get_appname(record)
-        procid = self.get_procid(record)
-        msgid = self.get_msgid(record)
+        try:
+            # HEADER
+            pri = '<%d>' % self.encodePriority(self.facility,
+                                               self.mapPriority(record.levelname))
+            version = SYSLOG_VERSION
+            timestamp = datetime.fromtimestamp(record.created, get_localzone())
+            if self.utc_timestamp:
+                timestamp = timestamp.astimezone(utc)
+            timestamp = timestamp.isoformat()
+            hostname = self.get_hostname(record)
+            appname = self.get_appname(record)
+            procid = self.get_procid(record)
+            msgid = self.get_msgid(record)
 
-        pri = pri.encode('ascii')
-        version = version.encode('ascii')
-        timestamp = timestamp.encode('ascii')
-        hostname = hostname.encode('ascii', 'replace')[:255]
-        appname = appname.encode('ascii', 'replace')[:48]
-        procid = procid.encode('ascii', 'replace')[:128]
-        msgid = msgid.encode('ascii', 'replace')[:32]
+            pri = pri.encode('ascii')
+            version = version.encode('ascii')
+            timestamp = timestamp.encode('ascii')
+            hostname = hostname.encode('ascii', 'replace')[:255]
+            appname = appname.encode('ascii', 'replace')[:48]
+            procid = procid.encode('ascii', 'replace')[:128]
+            msgid = msgid.encode('ascii', 'replace')[:32]
 
-        header = b''.join((pri, version, SP, timestamp, SP, hostname, SP, appname, SP, procid, SP, msgid))
+            header = b''.join((pri, version, SP, timestamp, SP, hostname, SP, appname, SP, procid, SP, msgid))
 
-        # STRUCTURED-DATA
-        enterprise_id = self.get_enterprise_id(record)
-        structured_data = self.get_structured_data(record)
-        cleaned_structured_data = []
-        for sd_id, sd_params in list(structured_data.items()):
-            # Clean structured data ID
-            sd_id = self.filter_printusascii(sd_id)
-            sd_id = sd_id.replace('=', '').replace(' ', '').replace(']', '').replace('"', '')
-            if '@' not in sd_id and sd_id not in REGISTERED_SD_IDs and enterprise_id is None:
-                raise ValueError("Enterprise ID has not been set. Cannot build structured data ID. "
-                                 "Please set a enterprise ID when initializing the logging handler "
-                                 "or include one in the structured data ID.")
-            elif '@' in sd_id:
-                sd_id, enterprise_id = sd_id.rsplit('@', 1)
+            # STRUCTURED-DATA
+            enterprise_id = self.get_enterprise_id(record)
+            structured_data = self.get_structured_data(record)
+            cleaned_structured_data = []
+            for sd_id, sd_params in list(structured_data.items()):
+                # Clean structured data ID
+                sd_id = self.filter_printusascii(sd_id)
+                sd_id = sd_id.replace('=', '').replace(' ', '').replace(']', '').replace('"', '')
+                if '@' not in sd_id and sd_id not in REGISTERED_SD_IDs and enterprise_id is None:
+                    raise ValueError("Enterprise ID has not been set. Cannot build structured data ID. "
+                                     "Please set a enterprise ID when initializing the logging handler "
+                                     "or include one in the structured data ID.")
+                elif '@' in sd_id:
+                    sd_id, enterprise_id = sd_id.rsplit('@', 1)
 
-            if len(enterprise_id) > 30:
-                raise ValueError("Enterprise ID is too long. Impossible to build structured data ID.")
+                if len(enterprise_id) > 30:
+                    raise ValueError("Enterprise ID is too long. Impossible to build structured data ID.")
 
-            sd_id = sd_id.replace('@', '')
-            if len(sd_id) + len(enterprise_id) > 32:
-                sd_id = sd_id[:31 - len(enterprise_id)]
-            if sd_id not in REGISTERED_SD_IDs:
-                sd_id = '@'.join((sd_id, enterprise_id))
-            sd_id = sd_id.encode('ascii', 'replace')
+                sd_id = sd_id.replace('@', '')
+                if len(sd_id) + len(enterprise_id) > 32:
+                    sd_id = sd_id[:31 - len(enterprise_id)]
+                if sd_id not in REGISTERED_SD_IDs:
+                    sd_id = '@'.join((sd_id, enterprise_id))
+                sd_id = sd_id.encode('ascii', 'replace')
 
-            cleaned_sd_params = []
-            # ignore sd params not int key-value format
-            if isinstance(sd_params, dict):
-                sd_params = sd_params.items()
+                cleaned_sd_params = []
+                # ignore sd params not int key-value format
+                if isinstance(sd_params, dict):
+                    sd_params = sd_params.items()
+                else:
+                    sd_params = []
+
+                # Clean key-value pairs
+                for (param_name, param_value) in sd_params:
+                    param_name = self.filter_printusascii(str(param_name))
+                    param_name = param_name.replace('=', '').replace(' ', '').replace(']', '').replace('"', '')
+                    if param_value is None:
+                        param_value = ''
+
+                    param_value = str(param_value)
+
+                    if PY2:
+                        param_value = unicode(param_value, 'utf-8')  # noqa
+
+                    param_value = param_value.replace('\\', '\\\\').replace('"', '\\"').replace(']', '\\]')
+
+                    param_name = param_name.encode('ascii', 'replace')[:32]
+                    param_value = param_value.encode('utf-8', 'replace')
+
+                    sd_param = b''.join((param_name, b'="', param_value, b'"'))
+                    cleaned_sd_params.append(sd_param)
+
+                cleaned_sd_params = SP.join(cleaned_sd_params)
+
+                # build structured data element
+                spacer = SP if cleaned_sd_params else b''
+                sd_element = b''.join((b'[', sd_id, spacer, cleaned_sd_params, b']'))
+                cleaned_structured_data.append(sd_element)
+
+            if cleaned_structured_data:
+                structured_data = b''.join(cleaned_structured_data)
             else:
-                sd_params = []
+                structured_data = NILVALUE.encode('ascii')
 
-            # Clean key-value pairs
-            for (param_name, param_value) in sd_params:
-                param_name = self.filter_printusascii(str(param_name))
-                param_name = param_name.replace('=', '').replace(' ', '').replace(']', '').replace('"', '')
-                if param_value is None:
-                    param_value = ''
-
-                param_value = str(param_value)
-
-                if PY2:
-                    param_value = unicode(param_value, 'utf-8')  # noqa
-
-                param_value = param_value.replace('\\', '\\\\').replace('"', '\\"').replace(']', '\\]')
-
-                param_name = param_name.encode('ascii', 'replace')[:32]
-                param_value = param_value.encode('utf-8', 'replace')
-
-                sd_param = b''.join((param_name, b'="', param_value, b'"'))
-                cleaned_sd_params.append(sd_param)
-
-            cleaned_sd_params = SP.join(cleaned_sd_params)
-
-            # build structured data element
-            spacer = SP if cleaned_sd_params else b''
-            sd_element = b''.join((b'[', sd_id, spacer, cleaned_sd_params, b']'))
-            cleaned_structured_data.append(sd_element)
-
-        if cleaned_structured_data:
-            structured_data = b''.join(cleaned_structured_data)
-        else:
-            structured_data = NILVALUE.encode('ascii')
-
-        # MSG
-        if record.msg is None or record.msg == "":
-            pieces = (header, structured_data)
-        else:
-            msg = self.format(record)
-            if self.msg_as_utf8:
-                msg = b''.join((BOM_UTF8, msg.encode('utf-8')))
+            # MSG
+            if record.msg is None or record.msg == "":
+                pieces = (header, structured_data)
             else:
-                msg = msg.encode('utf-8')
-            pieces = (header, structured_data, msg)
+                msg = self.format(record)
+                if self.msg_as_utf8:
+                    msg = b''.join((BOM_UTF8, msg.encode('utf-8')))
+                else:
+                    msg = msg.encode('utf-8')
+                pieces = (header, structured_data, msg)
 
-        # SYSLOG-MSG
-        # with RFC6587 framing
-        if self.socktype == socket.SOCK_STREAM:
-            if self.framing == Rfc5424SysLogHandler.FRAMING_NON_TRANSPARENT:
+            # SYSLOG-MSG
+            # with RFC6587 framing
+            if self.socktype == socket.SOCK_STREAM:
+                if self.framing == Rfc5424SysLogHandler.FRAMING_NON_TRANSPARENT:
+                    syslog_msg = SP.join(pieces)
+                    syslog_msg = syslog_msg.replace(b'\n', b'\\n')
+                    syslog_msg = b''.join((syslog_msg, b'\n'))
+                else:
+                    syslog_msg = SP.join(pieces)
+                    syslog_msg = SP.join((str(len(syslog_msg)).encode('ascii'), syslog_msg))
+            else:
                 syslog_msg = SP.join(pieces)
-                syslog_msg = syslog_msg.replace(b'\n', b'\\n')
-                syslog_msg = b''.join((syslog_msg, b'\n'))
+
+            # Off it goes
+            # Copied from SysLogHandler
+            if self.unixsocket:
+                try:
+                    self.socket.send(syslog_msg)
+                except (OSError, IOError):
+                    self.socket.close()
+                    self._connect_unixsocket(self.address)
+                    self.socket.send(syslog_msg)
+            elif self.socktype == socket.SOCK_DGRAM:
+                self.socket.sendto(syslog_msg, self.address)
             else:
-                syslog_msg = SP.join(pieces)
-                syslog_msg = SP.join((str(len(syslog_msg)).encode('ascii'), syslog_msg))
-        else:
-            syslog_msg = SP.join(pieces)
-
-        return syslog_msg
-
-    def send_to_socket(self, syslog_msg):
-        # Off it goes
-        # Copied from SysLogHandler
-        if self.unixsocket:
-            try:
-                self.socket.send(syslog_msg)
-            except (OSError, IOError):
-                self.socket.close()
-                self._connect_unixsocket(self.address)
-                self.socket.send(syslog_msg)
-        elif self.socktype == socket.SOCK_DGRAM:
-            self.socket.sendto(syslog_msg, self.address)
-        else:
-            self.socket.sendall(syslog_msg)
-
-
-class TlsRfc5424SysLogHandler(Rfc5424SysLogHandler):
-    def __init__(self, address=('localhost', SYSLOG_TCP_PORT), facility=SysLogHandler.LOG_USER,
-                 framing=Rfc5424SysLogHandler.FRAMING_NON_TRANSPARENT, msg_as_utf8=True,
-                 hostname=None, appname=None, procid=None, structured_data=None, enterprise_id=None, ssl_timeout=3,
-                 ssl_wrapper_kwargs=None):
-        """An rfc5424-compliant logger that logs via TLS.
-
-        Args:
-            address (tuple):
-                address in the form of a (host, port) tuple
-            facility (int):
-                One of the Rfc5424SysLogHandler.LOG_* values.
-            framing (int):
-                One of the Rfc5424SysLogHandler.FRAMING_* values according to
-                RFC6587 section 3.4. Only applies when sockettype is socket.SOCK_STREAM (TCP)
-                and is used to give the syslog server an indication about the boundaries
-                of the message. Defaults to FRAMING_NON_TRANSPARENT which will escape all
-                newline characters in the message and end the message with a newline character.
-                When set to FRAMING_OCTET_COUNTING, it will prepend the message length to the
-                begin of the message.
-            msg_as_utf8 (bool):
-                Controls the way the message is sent.
-                disabling this parameter sends the message as MSG-ANY (RFC2424 section 6), avoiding
-                issues with receivers that don't supporti the UTF-8 Byte Order Mark (BOM) at
-                the beginning of the message.
-            hostname (str):
-                The hostname of the system where the message originated from.
-                Defaults to `socket.gethostname()`
-            appname (str):
-                The name of the application. Defaults to the name of the logger that sent
-                the message.
-            procid (any):
-                The process ID of the sending application. Defaults to the `process` attribute
-                of the log record.
-            structured_data (dict):
-                A dictionary with structured data that is added to every message. Per message your
-                can add more structured data by adding it to the `extra` argument of the log function.
-            enterprise_id (int):
-                Then Private Enterprise Number. This is used to compose the structured data IDs when
-                they do not include an Enterprise ID and are not one of the reserved structured data IDs
-            ssl_timeout(int): The timeout to set on the socket connection
-            ssl_wrapper_kwargs: Kwargs for ssl.wrap_socket()
-        """
-        assert isinstance(address, tuple), 'TLS communication requires the address to be a tuple of (host, port)'
-        super(TlsRfc5424SysLogHandler, self).__init__(
-            address=address,
-            facility=facility,
-            socktype=socket.SOCK_STREAM,
-            framing=framing,
-            msg_as_utf8=msg_as_utf8,
-            hostname=hostname,
-            appname=appname,
-            procid=procid,
-            structured_data=structured_data,
-            enterprise_id=enterprise_id
-        )
-
-        self.ssl_wrapper_kwargs = ssl_wrapper_kwargs or {}
-        self.socket.settimeout(ssl_timeout)
-        self.socket = ssl.wrap_socket(self.socket, **self.ssl_wrapper_kwargs)
+                self.socket.sendall(syslog_msg)
+        except Exception:
+            self.handleError(record)
