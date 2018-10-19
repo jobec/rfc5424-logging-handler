@@ -25,6 +25,7 @@ Features
 * `RFC 5424 <https://tools.ietf.org/html/rfc5424>`_ Compliant.
 * Python Logging adapter for easier sending of rfc5424 specific fields.
 * No need for complicated formatting strings.
+* TLS/SSL syslog support.
 
 Contents
 --------

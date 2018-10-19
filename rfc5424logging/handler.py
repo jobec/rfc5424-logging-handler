@@ -137,7 +137,7 @@ class Rfc5424SysLogHandler(SysLogHandler):
             tls_client_cert (str):
                 path to a file containing a client certificate.
             tls_client_key (str):
-                Path to a file contianing the client private key.
+                Path to a file containing the client private key.
             tls_key_password (str):
                 Optionally the password for decrypting the specified private key.
         """

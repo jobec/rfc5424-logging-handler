@@ -150,6 +150,33 @@ You can enable this by setting the ``utc_timestamp`` argument to ``True`` like t
         utc_timestamp=True
     )
 
+TLS/SSL syslog connection
+---------------------
+Sometimes logs contain sensitive date and shouldn't go over the network in plain text.
+For this, you can setup a TLS/SSL connection to the syslog server with the following example.
+
+Check out the code the the ``Rfc5424SysLogHandler`` class for more options.
+
+.. code-block:: python
+
+    import logging
+    from rfc5424logging import Rfc5424SysLogHandler
+
+    logger = logging.getLogger('syslogtest')
+    logger.setLevel(logging.INFO)
+
+    sh = Rfc5424SysLogHandler(
+        address=('10.0.0.1', 514),
+        tls_enable=True,
+        tls_verify=True,
+        tls_ca_bundle="/path/to/ca-bundle.pem"
+    )
+    logger.addHandler(sh)
+
+    msg_type = 'interesting'
+    logger.info('This is an %s message', msg_type)
+
+
 Using a logging config dictionary
 ---------------------------------
 
