@@ -1,13 +1,14 @@
 # coding=utf-8
-from datetime import datetime
 import socket
+import ssl
 import sys
 from codecs import BOM_UTF8
 from collections import OrderedDict
+from datetime import datetime
 from logging.handlers import SysLogHandler, SYSLOG_UDP_PORT
 
-from tzlocal import get_localzone
 from pytz import utc
+from tzlocal import get_localzone
 
 NILVALUE = '-'
 
@@ -45,12 +46,27 @@ class Rfc5424SysLogHandler(SysLogHandler):
         "EMERG": "emerg",
     }
 
-    def __init__(self, address=('localhost', SYSLOG_UDP_PORT),
-                 facility=SysLogHandler.LOG_USER,
-                 socktype=socket.SOCK_DGRAM,
-                 framing=FRAMING_NON_TRANSPARENT, msg_as_utf8=True,
-                 hostname=None, appname=None, procid=None,
-                 structured_data=None, enterprise_id=None, utc_timestamp=False):
+    def __init__(
+            self,
+            address=('localhost', SYSLOG_UDP_PORT),
+            facility=SysLogHandler.LOG_USER,
+            socktype=socket.SOCK_DGRAM,
+            framing=FRAMING_NON_TRANSPARENT,
+            msg_as_utf8=True,
+            hostname=None,
+            appname=None,
+            procid=None,
+            structured_data=None,
+            enterprise_id=None,
+            utc_timestamp=False,
+            timeout=5,
+            tls_enable=False,
+            tls_ca_bundle=None,
+            tls_verify=True,
+            tls_client_cert=None,
+            tls_client_key=None,
+            tls_key_password=None,
+    ):
         """
         Returns a new instance of the Rfc5424SysLogHandler class intended to communicate with
         a remote machine whose address is given by address in the form of a (host, port) tuple.
@@ -87,7 +103,7 @@ class Rfc5424SysLogHandler(SysLogHandler):
             msg_as_utf8 (bool):
                 Controls the way the message is sent.
                 disabling this parameter sends the message as MSG-ANY (RFC2424 section 6), avoiding
-                issues with receivers that don't supporti the UTF-8 Byte Order Mark (BOM) at
+                issues with receivers that don't support the UTF-8 Byte Order Mark (BOM) at
                 the beginning of the message.
             hostname (str):
                 The hostname of the system where the message originated from.
@@ -106,7 +122,27 @@ class Rfc5424SysLogHandler(SysLogHandler):
                 they do not include an Enterprise ID and are not one of the reserved structured data IDs
             utc_timestamp (bool):
                 Whether the timestamp should be converted to UTC time or kept in the local timezone
+            timeout (int):
+                Sets the timeout on the connection to the server.
+            tls_enable (bool):
+                If set to `True`, it sets up a TLS/SSL connection to the address specified in `address`
+                over which the syslog messages will be sent.
+                Default to `False`
+            tls_ca_bundle (str):
+                The path to a bundle of CA certificates used for validating the remote server's identity.
+                If set to `None`, it will try to load the default CA as described in
+                https://docs.python.org/3/library/ssl.html#ssl.SSLContext.load_verify_locations
+            tls_verify (bool):
+                Whether to verify the certificate of the server.
+            tls_client_cert (str):
+                path to a file containing a client certificate.
+            tls_client_key (str):
+                Path to a file containing the client private key.
+            tls_key_password (str):
+                Optionally the password for decrypting the specified private key.
         """
+        super(Rfc5424SysLogHandler, self).__init__(address, facility, socktype)
+
         self.hostname = hostname
         self.appname = appname
         self.procid = procid
@@ -121,7 +157,18 @@ class Rfc5424SysLogHandler(SysLogHandler):
         if not isinstance(self.structured_data, dict):
             self.structured_data = OrderedDict()
 
-        super(Rfc5424SysLogHandler, self).__init__(address, facility, socktype)
+        self.socket.settimeout(timeout)
+
+        if tls_enable:
+            assert socktype == socket.SOCK_STREAM, 'Enabling TLS requires the socket type to be socket.SOCK_STREAM'
+            assert isinstance(address, tuple), 'TLS communication requires the address to be a tuple of (host, port)'
+
+            context = ssl.create_default_context(purpose=ssl.Purpose.SERVER_AUTH, cafile=tls_ca_bundle)
+            context.verify_mode = ssl.CERT_REQUIRED if tls_verify else ssl.CERT_NONE
+            server_hostname, port = address
+            if tls_client_cert:
+                context.load_cert_chain(tls_client_cert, tls_client_key, tls_key_password)
+            self.socket = context.wrap_socket(self.socket, server_hostname=server_hostname)
 
     @staticmethod
     def filter_printusascii(str_to_filter):
