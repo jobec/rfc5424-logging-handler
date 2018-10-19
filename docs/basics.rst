@@ -151,7 +151,8 @@ You can enable this by setting the ``utc_timestamp`` argument to ``True`` like t
     )
 
 TLS/SSL syslog connection
----------------------
+-------------------------
+
 Sometimes logs contain sensitive date and shouldn't go over the network in plain text.
 For this, you can setup a TLS/SSL connection to the syslog server with the following example.
 
