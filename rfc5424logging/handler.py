@@ -60,6 +60,7 @@ class Rfc5424SysLogHandler(SysLogHandler):
             enterprise_id=None,
             utc_timestamp=False,
             timeout=5,
+            echo_to_stream=None,
             tls_enable=False,
             tls_ca_bundle=None,
             tls_verify=True,
@@ -124,6 +125,8 @@ class Rfc5424SysLogHandler(SysLogHandler):
                 Whether the timestamp should be converted to UTC time or kept in the local timezone
             timeout (int):
                 Sets the timeout on the connection to the server.
+            echo_to_stream (file):
+                Echo output to a file stream, such as sys.stdout.
             tls_enable (bool):
                 If set to `True`, it sets up a TLS/SSL connection to the address specified in `address`
                 over which the syslog messages will be sent.
@@ -151,6 +154,7 @@ class Rfc5424SysLogHandler(SysLogHandler):
         self.framing = framing
         self.msg_as_utf8 = msg_as_utf8
         self.utc_timestamp = utc_timestamp
+        self._echo_stream = echo_to_stream
 
         if self.hostname is None or self.hostname == '':
             self.hostname = socket.gethostname()
@@ -395,6 +399,10 @@ class Rfc5424SysLogHandler(SysLogHandler):
                 syslog_msg = SP.join(pieces)
 
             # Off it goes
+            if self._echo_stream is not None:
+                self._echo_stream.write(str(syslog_msg))
+                self._echo_stream.write('\n')
+
             # Copied from SysLogHandler
             if self.unixsocket:
                 try:
