@@ -5,10 +5,13 @@ import sys
 from codecs import BOM_UTF8
 from collections import OrderedDict
 from datetime import datetime
-from logging.handlers import SysLogHandler, SYSLOG_UDP_PORT
+from logging import Handler
 
 from pytz import utc
 from tzlocal import get_localzone
+
+SYSLOG_UDP_PORT = 514
+SYSLOG_TCP_PORT = 514
 
 NILVALUE = '-'
 
@@ -25,31 +28,73 @@ NOTICE = 25
 PY2 = sys.version_info[0] == 2
 
 
-class Rfc5424SysLogHandler(SysLogHandler):
+class Rfc5424SysLogHandler(Handler):
     """
     A handler class which sends RFC 5424 formatted logging records to a syslog server.
+
+    Based on the python built-in SyslogHandler class, but simplified in some parts.
     """
     # RFC6587 framing
     FRAMING_OCTET_COUNTING = 1
     FRAMING_NON_TRANSPARENT = 2
 
-    # From the SysLogHandler class but extended with NOTICE, ALERT end EMERGENCY
+    # from <linux/sys/syslog.h>:
+    # ======================================================================
+    # priorities/facilities are encoded into a single 32-bit quantity, where
+    # the bottom 3 bits are the priority (0-7) and the top 28 bits are the
+    # facility (0-big number). Both the priorities and the facilities map
+    # roughly one-to-one to strings in the syslogd(8) source code.  This
+    # mapping is included in this file.
+    #
+    # priorities (these are ordered)
+    LOG_EMERG = 0      # system is unusable
+    LOG_ALERT = 1      # action must be taken immediately
+    LOG_CRIT = 2       # critical conditions
+    LOG_ERR = 3        # error conditions
+    LOG_WARNING = 4    # warning conditions
+    LOG_NOTICE = 5     # normal but significant condition
+    LOG_INFO = 6       # informational
+    LOG_DEBUG = 7      # debug-level messages
+
+    #  facility codes
+    LOG_KERN = 0       # kernel messages
+    LOG_USER = 1       # random user-level messages
+    LOG_MAIL = 2       # mail system
+    LOG_DAEMON = 3     # system daemons
+    LOG_AUTH = 4       # security/authorization messages
+    LOG_SYSLOG = 5     # messages generated internally by syslogd
+    LOG_LPR = 6        # line printer subsystem
+    LOG_NEWS = 7       # network news subsystem
+    LOG_UUCP = 8       # UUCP subsystem
+    LOG_CRON = 9       # clock daemon
+    LOG_AUTHPRIV = 10  # security/authorization messages (private)
+    LOG_FTP = 11       # FTP daemon
+    #  other codes through 15 reserved for system use
+    LOG_LOCAL0 = 16    # reserved for local use
+    LOG_LOCAL1 = 17    # reserved for local use
+    LOG_LOCAL2 = 18    # reserved for local use
+    LOG_LOCAL3 = 19    # reserved for local use
+    LOG_LOCAL4 = 20    # reserved for local use
+    LOG_LOCAL5 = 21    # reserved for local use
+    LOG_LOCAL6 = 22    # reserved for local use
+    LOG_LOCAL7 = 23    # reserved for local use
+
     priority_map = {
-        "DEBUG": "debug",
-        "INFO": "info",
-        "NOTICE": "notice",
-        "WARNING": "warning",
-        "ERROR": "error",
-        "CRITICAL": "critical",
-        "ALERT": "alert",
-        "EMERGENCY": "emerg",
-        "EMERG": "emerg",
+        "DEBUG": LOG_DEBUG,
+        "INFO": LOG_INFO,
+        "NOTICE": LOG_NOTICE,
+        "WARNING": LOG_WARNING,
+        "ERROR": LOG_ERR,
+        "CRITICAL": LOG_CRIT,
+        "ALERT": LOG_ALERT,
+        "EMERGENCY": LOG_EMERG,
+        "EMERG": LOG_EMERG,
     }
 
     def __init__(
             self,
             address=('localhost', SYSLOG_UDP_PORT),
-            facility=SysLogHandler.LOG_USER,
+            facility=LOG_USER,
             socktype=socket.SOCK_DGRAM,
             framing=FRAMING_NON_TRANSPARENT,
             msg_as_utf8=True,
@@ -141,8 +186,13 @@ class Rfc5424SysLogHandler(SysLogHandler):
             tls_key_password (str):
                 Optionally the password for decrypting the specified private key.
         """
-        super(Rfc5424SysLogHandler, self).__init__(address, facility, socktype)
+        super(Rfc5424SysLogHandler, self).__init__()
 
+        self.address = address
+        self.facility = facility
+        self.socktype = socktype
+        self.socket = None
+        self.unixsocket = False
         self.hostname = hostname
         self.appname = appname
         self.procid = procid
@@ -151,24 +201,105 @@ class Rfc5424SysLogHandler(SysLogHandler):
         self.framing = framing
         self.msg_as_utf8 = msg_as_utf8
         self.utc_timestamp = utc_timestamp
+        self.timeout = timeout
+        self.tls_enable = tls_enable
+        self.tls_ca_bundle = tls_ca_bundle
+        self.tls_verify = tls_verify
+        self.tls_client_cert = tls_client_cert
+        self.tls_client_key = tls_client_key
+        self.tls_key_password = tls_key_password
+
+        if not (isinstance(self.facility, int) and self.LOG_KERN <= self.facility <= self.LOG_LOCAL7):
+            raise ValueError("Facility is not valid")
 
         if self.hostname is None or self.hostname == '':
             self.hostname = socket.gethostname()
         if not isinstance(self.structured_data, dict):
             self.structured_data = OrderedDict()
 
-        self.socket.settimeout(timeout)
+        self._setup_transport()
 
-        if tls_enable:
+    def _setup_transport(self):
+        if isinstance(self.address, str):
+            self.unixsocket = True
+            # Syslog server may be unavailable during handler initialisation.
+            # C's openlog() function also ignores connection errors.
+            # Moreover, we ignore these errors while logging, so it not worse
+            # to ignore it also here.
+            try:
+                self._connect_unixsocket(self.address)
+            except OSError:
+                pass
+        else:
+            self.unixsocket = False
+            if self.socktype is None:
+                self.socktype = socket.SOCK_DGRAM
+            host, port = self.address
+            ress = socket.getaddrinfo(host, port, 0, self.socktype)
+            if not ress:
+                raise OSError("getaddrinfo returns an empty list")
+            for res in ress:
+                af, socktype, proto, _, sa = res
+                err = sock = None
+                try:
+                    sock = socket.socket(af, socktype, proto)
+                    if socktype == socket.SOCK_STREAM:
+                        sock.connect(sa)
+                    break
+                except OSError as exc:
+                    err = exc
+                    if sock is not None:
+                        sock.close()
+            if err is not None:
+                raise err
+            self.socket = sock
+            self.socktype = socktype
+
+        self.socket.settimeout(self.timeout)
+
+        if self.tls_enable:
             assert socktype == socket.SOCK_STREAM, 'Enabling TLS requires the socket type to be socket.SOCK_STREAM'
-            assert isinstance(address, tuple), 'TLS communication requires the address to be a tuple of (host, port)'
+            assert isinstance(self.address, tuple), 'TLS communication requires the address to be a tuple of (host, port)'
 
-            context = ssl.create_default_context(purpose=ssl.Purpose.SERVER_AUTH, cafile=tls_ca_bundle)
-            context.verify_mode = ssl.CERT_REQUIRED if tls_verify else ssl.CERT_NONE
-            server_hostname, port = address
-            if tls_client_cert:
-                context.load_cert_chain(tls_client_cert, tls_client_key, tls_key_password)
+            context = ssl.create_default_context(purpose=ssl.Purpose.SERVER_AUTH, cafile=self.tls_ca_bundle)
+            context.verify_mode = ssl.CERT_REQUIRED if self.tls_verify else ssl.CERT_NONE
+            server_hostname, port = self.address
+            if self.tls_client_cert:
+                context.load_cert_chain(self.tls_client_cert, self.tls_client_key, self.tls_key_password)
             self.socket = context.wrap_socket(self.socket, server_hostname=server_hostname)
+
+    def _connect_unixsocket(self, address):
+        use_socktype = self.socktype
+        if use_socktype is None:
+            use_socktype = socket.SOCK_DGRAM
+        self.socket = socket.socket(socket.AF_UNIX, use_socktype)
+        try:
+            self.socket.connect(address)
+            # it worked, so set self.socktype to the used type
+            self.socktype = use_socktype
+        except OSError:
+            self.socket.close()
+            if self.socktype is not None:
+                # user didn't specify falling back, so fail
+                raise
+            use_socktype = socket.SOCK_STREAM
+            self.socket = socket.socket(socket.AF_UNIX, use_socktype)
+            try:
+                self.socket.connect(address)
+                # it worked, so set self.socktype to the used type
+                self.socktype = use_socktype
+            except OSError:
+                self.socket.close()
+                raise
+
+    def encode_priority(self, facility, priority):
+        """
+        Encode the facility and priority. You can pass in strings or
+        integers - if strings are passed, the facility_names and
+        priority_names mapping dictionaries are used to convert them to
+        integers.
+        """
+        return (facility << 3) | self.priority_map.get(priority, self.LOG_WARNING)
 
     @staticmethod
     def filter_printusascii(str_to_filter):
@@ -284,8 +415,7 @@ class Rfc5424SysLogHandler(SysLogHandler):
 
         try:
             # HEADER
-            pri = '<%d>' % self.encodePriority(self.facility,
-                                               self.mapPriority(record.levelname))
+            pri = '<%d>' % self.encode_priority(self.facility, record.levelname)
             version = SYSLOG_VERSION
             timestamp = datetime.fromtimestamp(record.created, get_localzone())
             if self.utc_timestamp:
@@ -380,19 +510,16 @@ class Rfc5424SysLogHandler(SysLogHandler):
                 else:
                     msg = msg.encode('utf-8')
                 pieces = (header, structured_data, msg)
+            syslog_msg = SP.join(pieces)
 
             # SYSLOG-MSG
             # with RFC6587 framing
             if self.socktype == socket.SOCK_STREAM:
                 if self.framing == Rfc5424SysLogHandler.FRAMING_NON_TRANSPARENT:
-                    syslog_msg = SP.join(pieces)
                     syslog_msg = syslog_msg.replace(b'\n', b'\\n')
                     syslog_msg = b''.join((syslog_msg, b'\n'))
                 else:
-                    syslog_msg = SP.join(pieces)
                     syslog_msg = SP.join((str(len(syslog_msg)).encode('ascii'), syslog_msg))
-            else:
-                syslog_msg = SP.join(pieces)
 
             # Off it goes
             # Copied from SysLogHandler
@@ -409,3 +536,14 @@ class Rfc5424SysLogHandler(SysLogHandler):
                 self.socket.sendall(syslog_msg)
         except Exception:
             self.handleError(record)
+
+    def close(self):
+        """
+        Closes the socket.
+        """
+        self.acquire()
+        try:
+            self.socket.close()
+            super(Rfc5424SysLogHandler, self).close()
+        finally:
+            self.release()
