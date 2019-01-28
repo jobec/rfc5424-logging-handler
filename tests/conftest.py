@@ -98,7 +98,7 @@ def logger():
 def logger_with_udp_handler(logger):
     sh = Rfc5424SysLogHandler(address=address)
     logger.addHandler(sh)
-    with patch.object(sh, 'socket') as syslog_socket:
+    with patch.object(sh.transport, 'socket') as syslog_socket:
         yield logger, syslog_socket
     logger.removeHandler(sh)
 
@@ -114,6 +114,6 @@ def adapter_with_udp_handler(logger_with_udp_handler):
 def logger_with_tcp_handler(logger):
     sh = Rfc5424SysLogHandler(address=address, socktype=socket.SOCK_STREAM)
     logger.addHandler(sh)
-    with patch.object(sh, 'socket', side_effect=connect_mock) as syslog_socket:
+    with patch.object(sh.transport, 'socket', side_effect=connect_mock) as syslog_socket:
         yield logger, syslog_socket
     logger.removeHandler(sh)

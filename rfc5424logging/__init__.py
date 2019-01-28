@@ -1,5 +1,29 @@
 from .adapter import Rfc5424SysLogAdapter, EMERGENCY, ALERT, NOTICE
-from .handler import Rfc5424SysLogHandler, NILVALUE
+from .handler import (
+    Rfc5424SysLogHandler,
+    NILVALUE,
+    LOG_KERN,
+    LOG_USER,
+    LOG_MAIL,
+    LOG_DAEMON,
+    LOG_AUTH,
+    LOG_SYSLOG,
+    LOG_LPR,
+    LOG_NEWS,
+    LOG_UUCP,
+    LOG_CRON,
+    LOG_AUTHPRIV,
+    LOG_FTP,
+    LOG_LOCAL0,
+    LOG_LOCAL1,
+    LOG_LOCAL2,
+    LOG_LOCAL3,
+    LOG_LOCAL4,
+    LOG_LOCAL5,
+    LOG_LOCAL6,
+    LOG_LOCAL7,
+)
+from .transport import FRAMING_NON_TRANSPARENT, FRAMING_OCTET_COUNTING
 
 __version__ = "1.3.0"
 
@@ -9,5 +33,27 @@ __all__ = [
     'EMERGENCY',
     'ALERT',
     'NOTICE',
-    'NILVALUE'
+    'NILVALUE',
+    'FRAMING_NON_TRANSPARENT',
+    'FRAMING_OCTET_COUNTING',
+    'LOG_KERN',
+    'LOG_USER',
+    'LOG_MAIL',
+    'LOG_DAEMON',
+    'LOG_AUTH',
+    'LOG_SYSLOG',
+    'LOG_LPR',
+    'LOG_NEWS',
+    'LOG_UUCP',
+    'LOG_CRON',
+    'LOG_AUTHPRIV',
+    'LOG_FTP',
+    'LOG_LOCAL0',
+    'LOG_LOCAL1',
+    'LOG_LOCAL2',
+    'LOG_LOCAL3',
+    'LOG_LOCAL4',
+    'LOG_LOCAL5',
+    'LOG_LOCAL6',
+    'LOG_LOCAL7',
 ]

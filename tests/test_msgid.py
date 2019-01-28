@@ -52,7 +52,7 @@ from rfc5424logging import Rfc5424SysLogHandler, NILVALUE
 def test_msgid(logger, logger_kwargs, expected):
     sh = Rfc5424SysLogHandler(address=address)
     logger.addHandler(sh)
-    with patch.object(sh, 'socket') as syslog_socket:
+    with patch.object(sh.transport, 'socket') as syslog_socket:
         logger.info(message, **logger_kwargs)
         syslog_socket.sendto.assert_called_once_with(expected, address)
         syslog_socket.sendto.reset_mock()

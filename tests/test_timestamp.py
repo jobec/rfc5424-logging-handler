@@ -24,7 +24,7 @@ from rfc5424logging import Rfc5424SysLogHandler
 def test_timestamp(logger, handler_kwargs, expected):
     sh = Rfc5424SysLogHandler(**handler_kwargs)
     logger.addHandler(sh)
-    with patch.object(sh, 'socket') as syslog_socket:
+    with patch.object(sh.transport, 'socket') as syslog_socket:
         logger.info(message)
         syslog_socket.sendto.assert_called_once_with(expected, address)
         syslog_socket.sendto.reset_mock()

@@ -79,7 +79,7 @@ def test_adapter(logger, handler_kwargs, adapter_kwargs, logger_kwargs, expected
     sh = Rfc5424SysLogHandler(**handler_kwargs)
     logger.addHandler(sh)
     adapter = Rfc5424SysLogAdapter(logger, **adapter_kwargs)
-    with patch.object(sh, 'socket') as syslog_socket:
+    with patch.object(sh.transport, 'socket') as syslog_socket:
         adapter.info(message, **logger_kwargs)
         syslog_socket.sendto.assert_called_once_with(expected, address)
         syslog_socket.sendto.reset_mock()

@@ -7,7 +7,7 @@ from conftest import (
 )
 from mock import patch
 import pytest
-from rfc5424logging import Rfc5424SysLogHandler, NILVALUE
+from rfc5424logging import Rfc5424SysLogHandler, NILVALUE, FRAMING_OCTET_COUNTING
 
 
 @pytest.mark.parametrize("handler_kwargs,expected", [
@@ -54,7 +54,7 @@ from rfc5424logging import Rfc5424SysLogHandler, NILVALUE
 def test_procid(logger, handler_kwargs, expected):
     sh = Rfc5424SysLogHandler(**handler_kwargs)
     logger.addHandler(sh)
-    with patch.object(sh, 'socket') as syslog_socket:
+    with patch.object(sh.transport, 'socket') as syslog_socket:
         logger.info(message)
         syslog_socket.sendto.assert_called_once_with(expected, address)
         syslog_socket.sendto.reset_mock()
@@ -96,7 +96,7 @@ def test_procid(logger, handler_kwargs, expected):
         b' - - \xef\xbb\xbfThis is an interesting message\n'
     ),
     (
-        {'address': address, 'procid': SomeClass(), 'socktype': socket.SOCK_STREAM, "framing": Rfc5424SysLogHandler.FRAMING_OCTET_COUNTING},
+        {'address': address, 'procid': SomeClass(), 'socktype': socket.SOCK_STREAM, "framing": FRAMING_OCTET_COUNTING},
         b'108 <14>1 2000-01-01T17:11:11.111111+06:00 testhostname root MyClassObject'
         b' - - \xef\xbb\xbfThis is an interesting message'
     ),
@@ -104,7 +104,7 @@ def test_procid(logger, handler_kwargs, expected):
 def test_procid_tcp(logger, handler_kwargs, expected):
     sh = Rfc5424SysLogHandler(**handler_kwargs)
     logger.addHandler(sh)
-    with patch.object(sh, 'socket', side_effect=connect_mock) as syslog_socket:
+    with patch.object(sh.transport, 'socket', side_effect=connect_mock) as syslog_socket:
         logger.info(message)
         syslog_socket.sendall.assert_called_once_with(expected)
         syslog_socket.sendall.reset_mock()
