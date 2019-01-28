@@ -111,13 +111,13 @@ class UDPSocketTransport:
         if error is not None:
             raise error
 
-    def transmit(self, msg):
+    def transmit(self, syslog_msg):
         try:
-            self.socket.sendto(msg, self.address)
+            self.socket.sendto(syslog_msg, self.address)
         except (OSError, IOError):
             self.close()
             self.open()
-            self.socket.sendto(msg, self.address)
+            self.socket.sendto(syslog_msg, self.address)
 
     def close(self):
         self.socket.close()
@@ -148,13 +148,13 @@ class UnixSocketTransport:
                 if self.socket is not None:
                     self.socket.close()
 
-    def transmit(self, msg):
+    def transmit(self, syslog_msg):
         try:
-            self.socket.send(msg)
+            self.socket.send(syslog_msg)
         except (OSError, IOError):
             self.close()
             self.open()
-            self.socket.send(msg)
+            self.socket.send(syslog_msg)
 
     def close(self):
         self.socket.close()
@@ -174,11 +174,11 @@ class StreamTransport:
 
         self.stream = stream
 
-    def transmit(self, msg):
-        msg = msg + b"\n"
+    def transmit(self, syslog_msg):
+        syslog_msg = syslog_msg + b"\n"
         if self.text_mode:
-            msg = msg.decode("utf-8", "replace")
-        self.stream.write(msg)
+            syslog_msg = syslog_msg.decode(self.stream.encoding, "replace")
+        self.stream.write(syslog_msg)
 
     def close(self):
         # Closing the stream is left up to the user.
