@@ -111,9 +111,11 @@ class Rfc5424SysLogHandler(Handler):
         """
         Returns a new instance of the Rfc5424SysLogHandler class intended to communicate with
         a remote machine whose address is given by address in the form of a (host, port) tuple.
-        If address is not specified, ('localhost', 514) is used. The address is used to open a
-        socket. An alternative to providing a (host, port) tuple is providing an address as a
-        string, for example '/dev/log'. In this case, a Unix domain socket is used to send the
+        If address is not specified, ``('localhost', 514)`` is used. The address is used to open a
+        socket.
+
+        An alternative to providing a (host, port) tuple is providing an address as a
+        string, for example `/dev/log`. In this case, a Unix domain socket is used to send the
         message to the syslog. If facility is not specified, LOG_USER is used. The type of
         socket opened depends on the socktype argument, which defaults to socket.SOCK_DGRAM
         and thus opens a UDP socket. To open a TCP socket (for use with the newer syslog
@@ -121,25 +123,30 @@ class Rfc5424SysLogHandler(Handler):
 
         Note that if your server is not listening on UDP port 514, SysLogHandler may appear
         not to work. In that case, check what address you should be using for a domain socket
-        - it's system dependent. For example, on Linux it's usually '/dev/log' but on OS/X
-        it's '/var/run/syslog'. You'll need to check your platform and use the appropriate
+        - it's system dependent. For example, on Linux it's usually ``/dev/log`` but on OS/X
+        it's ``/var/run/syslog``. You'll need to check your platform and use the appropriate
         address (you may need to do this check at runtime if your application needs to run
         on several platforms). On Windows, you pretty much have to use the UDP option.
+
+        As an alternative transport, you can also provide a stream
 
         Args:
             address (tuple):
                 address in the form of a (host, port) tuple
+
             facility (int):
-                One of the rfc5424logging.LOG_* values.
+                One of the ``rfc5424logging.LOG_*`` values.
+
             socktype (int):
-                One of socket.SOCK_STREAM (TCP) or socket.SOCK_DGRAM (UDP).
-            framing (int):
-                One of the rfc5424logging.FRAMING_* values according to
-                RFC6587 section 3.4. Only applies when sockettype is socket.SOCK_STREAM (TCP)
+                One of ``socket.SOCK_STREAM`` (TCP) or ``socket.SOCK_DGRAM`` (UDP).
+
+            framing (int, optional):
+                One of the ``rfc5424logging.FRAMING_*`` values according to
+                RFC6587 section 3.4. Only applies when sockettype is ``socket.SOCK_STREAM`` (TCP)
                 and is used to give the syslog server an indication about the boundaries
-                of the message. Defaults to FRAMING_NON_TRANSPARENT which will escape all
+                of the message. Defaults to ``FRAMING_NON_TRANSPARENT`` which will escape all
                 newline characters in the message and end the message with a newline character.
-                When set to FRAMING_OCTET_COUNTING, it will prepend the message length to the
+                When set to ``FRAMING_OCTET_COUNTING``, it will prepend the message length to the
                 begin of the message.
             msg_as_utf8 (bool):
                 Controls the way the message is sent.
@@ -148,16 +155,16 @@ class Rfc5424SysLogHandler(Handler):
                 the beginning of the message.
             hostname (str):
                 The hostname of the system where the message originated from.
-                Defaults to `socket.gethostname()`
+                Defaults to the values returned by ``socket.gethostname()``
             appname (str):
                 The name of the application. Defaults to the name of the logger that sent
                 the message.
             procid (any):
-                The process ID of the sending application. Defaults to the `process` attribute
+                The process ID of the sending application. Defaults to the ``process`` attribute
                 of the log record.
             structured_data (dict):
                 A dictionary with structured data that is added to every message. Per message your
-                can add more structured data by adding it to the `extra` argument of the log function.
+                can add more structured data by adding it to the ``extra`` argument of the log function.
             enterprise_id (int):
                 The Private Enterprise Number. This is used to compose the structured data IDs when
                 they do not include an Enterprise ID and are not one of the reserved structured data IDs
@@ -166,12 +173,12 @@ class Rfc5424SysLogHandler(Handler):
             timeout (int):
                 Sets the timeout on the connection to the server.
             tls_enable (bool):
-                If set to `True`, it sets up a TLS/SSL connection to the address specified in `address`
+                If set to ``True``, it sets up a TLS/SSL connection to the address specified in ``address``
                 over which the syslog messages will be sent.
-                Default to `False`
+                Default to ``False``
             tls_ca_bundle (str):
                 The path to a bundle of CA certificates used for validating the remote server's identity.
-                If set to `None`, it will try to load the default CA as described in
+                If set to ``None``, it will try to load the default CA as described in
                 https://docs.python.org/3/library/ssl.html#ssl.SSLContext.load_verify_locations
             tls_verify (bool):
                 Whether to verify the certificate of the server.
@@ -182,7 +189,8 @@ class Rfc5424SysLogHandler(Handler):
             tls_key_password (str):
                 Optionally the password for decrypting the specified private key.
             stream (io.BufferedIOBase, file, io.TextIOBase):
-                Optionally a stream object to send the message to.
+                Optionally a stream object to send the message to. See https://docs.python.org/3/library/io.html
+                for details.
         """
         super(Rfc5424SysLogHandler, self).__init__()
 
@@ -451,6 +459,7 @@ class Rfc5424SysLogHandler(Handler):
                 msg = msg.encode('utf-8')
             pieces = (header, structured_data, msg)
         syslog_msg = SP.join(pieces)
+
         return syslog_msg
 
     def emit(self, record):

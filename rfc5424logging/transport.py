@@ -10,7 +10,6 @@ else:
     text_stream_types = io.TextIOBase
     bytes_stream_types = io.BufferedIOBase, file
 
-
 SYSLOG_PORT = 514
 
 # RFC6587 framing
@@ -49,10 +48,10 @@ class TCPSocketTransport:
     def transmit(self, syslog_msg):
         # RFC6587 framing
         if self.framing == FRAMING_NON_TRANSPARENT:
-            syslog_msg = syslog_msg.replace(b'\n', b'\\n')
-            syslog_msg = b''.join((syslog_msg, b'\n'))
+            syslog_msg = syslog_msg.replace(b"\n", b"\\n")
+            syslog_msg = b"".join((syslog_msg, b"\n"))
         else:
-            syslog_msg = b' '.join((str(len(syslog_msg)).encode('ascii'), syslog_msg))
+            syslog_msg = b" ".join((str(len(syslog_msg)).encode("ascii"), syslog_msg))
 
         try:
             self.socket.sendall(syslog_msg)
@@ -66,7 +65,17 @@ class TCPSocketTransport:
 
 
 class TLSSocketTransport(TCPSocketTransport):
-    def __init__(self, address, timeout, framing, tls_ca_bundle, tls_verify, tls_client_cert, tls_client_key, tls_key_password):
+    def __init__(
+        self,
+        address,
+        timeout,
+        framing,
+        tls_ca_bundle,
+        tls_verify,
+        tls_client_cert,
+        tls_client_key,
+        tls_key_password,
+    ):
         super(TLSSocketTransport, self).__init__(address, timeout, framing=framing)
         self.tls_ca_bundle = tls_ca_bundle
         self.tls_verify = tls_verify
@@ -76,11 +85,15 @@ class TLSSocketTransport(TCPSocketTransport):
 
     def open(self):
         super(TLSSocketTransport, self).open()
-        context = ssl.create_default_context(purpose=ssl.Purpose.SERVER_AUTH, cafile=self.tls_ca_bundle)
+        context = ssl.create_default_context(
+            purpose=ssl.Purpose.SERVER_AUTH, cafile=self.tls_ca_bundle
+        )
         context.verify_mode = ssl.CERT_REQUIRED if self.tls_verify else ssl.CERT_NONE
         server_hostname, _ = self.address
         if self.tls_client_cert:
-            context.load_cert_chain(self.tls_client_cert, self.tls_client_key, self.tls_key_password)
+            context.load_cert_chain(
+                self.tls_client_cert, self.tls_client_key, self.tls_key_password
+            )
         self.socket = context.wrap_socket(self.socket, server_hostname=server_hostname)
 
 
@@ -134,7 +147,7 @@ class UnixSocketTransport:
         if self.socket_type is None:
             socket_types = [socket.SOCK_DGRAM, socket.SOCK_STREAM]
         else:
-            socket_types = [self.socket_type, ]
+            socket_types = [self.socket_type]
 
         for type_ in socket_types:
             # Syslog server may be unavailable during handler initialisation.

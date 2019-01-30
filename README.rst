@@ -26,6 +26,7 @@ Features
 * Python Logging adapter for easier sending of rfc5424 specific fields.
 * No need for complicated formatting strings.
 * TLS/SSL syslog support.
+* Alternate transports like streams (ex. stderr, stdout, file, ...).
 
 Installation
 ------------

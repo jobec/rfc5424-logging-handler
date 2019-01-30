@@ -12,16 +12,21 @@ class Rfc5424SysLogAdapter(logging.LoggerAdapter):
         provides contextual information. This constructor signature allows
         easy stacking of LoggerAdapters, if so desired.
 
-        You can effectively pass keyword arguments as shown in the
-        following example:
+        The dictionary passed as the ``extra`` argument will be included in every
+        message sent via the adapter.
 
-        adapter = Rfc5424SysLogAdapter(someLogger, dict(p1=v1, p2="v2"))
+        Example:
+
+            You can effectively pass keyword arguments as shown in the
+            following example::
+
+                >>> adapter = Rfc5424SysLogAdapter(someLogger, dict(p1=v1, p2="v2"))
 
         Args:
             logger (logging.Logger):
                 A Logger class instance
             extra (dict):
-                A Dictionary with with extra contextual information
+                A Dictionary with extra contextual information, sent with every message.
             enable_extra_levels (bool):
                 Add custom log levels to the logging framework.
                 Use with caution because it can conflict with other packages defining custom levels.
@@ -40,8 +45,11 @@ class Rfc5424SysLogAdapter(logging.LoggerAdapter):
 
     def process(self, msg=None, kwargs=None):
         """
-        Searches for `msgid` and `sd` or `structured_data` in the keyword arguments
-        and puts them in the `extra` keyword argument
+        Process the logging message and keyword arguments passed in to
+        a logging call to insert contextual information.
+
+        Searches for ``msgid`` and ``sd`` or ``structured_data`` in the keyword arguments
+        and puts them in the ``extra`` keyword argument
 
         We don't touch other keyword arguments so we don't interfere with possible
         other logger adapters

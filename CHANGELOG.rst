@@ -1,6 +1,26 @@
 Changelog
 ---------
 
+`1.4.0`_ - 2019/01/30
+~~~~~~~~~~~~~~~~~~~~~
+
+**Added**
+
+* `#27`_ Make it possible to log to streams as an alternate transport.
+* Added API documentation.
+
+**Changed**
+
+* Syslog facilities and framing options have moved from the ``RfcSysLogHandler`` class
+  to module level variables. **You may have to adjust your references to them.**
+
+`1.3.0`_ - 2018/10/19
+~~~~~~~~~~~~~~~~~~~~~
+
+**Added**
+
+* `#23`_ Add support for TLS/SSL
+
 `1.2.1`_ - 2018/09/21
 ~~~~~~~~~~~~~~~~~~~~~
 
@@ -110,6 +130,8 @@ No functional changes. Only documentation was changed.
 
 * Initial release
 
+.. _1.4.0: https://github.com/jobec/rfc5424-logging-handler/compare/1.3.0...1.4.0
+.. _1.3.0: https://github.com/jobec/rfc5424-logging-handler/compare/1.2.1...1.3.0
 .. _1.2.1: https://github.com/jobec/rfc5424-logging-handler/compare/1.1.2...1.2.1
 .. _1.1.2: https://github.com/jobec/rfc5424-logging-handler/compare/1.1.1...1.1.2
 .. _1.1.1: https://github.com/jobec/rfc5424-logging-handler/compare/1.1.0...1.1.1
@@ -122,6 +144,8 @@ No functional changes. Only documentation was changed.
 .. _0.1.0: https://github.com/jobec/rfc5424-logging-handler/compare/0.0.2...0.1.0
 .. _0.0.2: https://github.com/jobec/rfc5424-logging-handler/compare/0.0.1...0.0.2
 
+.. _#27: https://github.com/jobec/rfc5424-logging-handler/issues/27
+.. _#23: https://github.com/jobec/rfc5424-logging-handler/issues/23
 .. _#22: https://github.com/jobec/rfc5424-logging-handler/issues/22
 .. _#21: https://github.com/jobec/rfc5424-logging-handler/issues/21
 .. _#16: https://github.com/jobec/rfc5424-logging-handler/pull/16
