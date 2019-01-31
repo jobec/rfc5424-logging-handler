@@ -8,7 +8,7 @@ if sys.version_info.major == 3:
     bytes_stream_types = io.BufferedIOBase
 else:
     text_stream_types = io.TextIOBase
-    bytes_stream_types = io.BufferedIOBase, file
+    bytes_stream_types = io.BufferedIOBase, file  # noqa: F821
 
 SYSLOG_PORT = 514
 
