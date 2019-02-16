@@ -1,6 +1,13 @@
 Changelog
 ---------
 
+`1.4.1`_ - 2019/02/16
+~~~~~~~~~~~~~~~~~~~~~
+
+**Fixed**
+
+* `#29`_ Fix AttributeError when using TLS connection.
+
 `1.4.0`_ - 2019/01/30
 ~~~~~~~~~~~~~~~~~~~~~
 
@@ -130,6 +137,7 @@ No functional changes. Only documentation was changed.
 
 * Initial release
 
+.. _1.4.1: https://github.com/jobec/rfc5424-logging-handler/compare/1.4.0...1.4.1
 .. _1.4.0: https://github.com/jobec/rfc5424-logging-handler/compare/1.3.0...1.4.0
 .. _1.3.0: https://github.com/jobec/rfc5424-logging-handler/compare/1.2.1...1.3.0
 .. _1.2.1: https://github.com/jobec/rfc5424-logging-handler/compare/1.1.2...1.2.1
@@ -144,6 +152,7 @@ No functional changes. Only documentation was changed.
 .. _0.1.0: https://github.com/jobec/rfc5424-logging-handler/compare/0.0.2...0.1.0
 .. _0.0.2: https://github.com/jobec/rfc5424-logging-handler/compare/0.0.1...0.0.2
 
+.. _#29: https://github.com/jobec/rfc5424-logging-handler/issues/29
 .. _#27: https://github.com/jobec/rfc5424-logging-handler/issues/27
 .. _#23: https://github.com/jobec/rfc5424-logging-handler/issues/23
 .. _#22: https://github.com/jobec/rfc5424-logging-handler/issues/22
