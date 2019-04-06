@@ -132,7 +132,7 @@ class Rfc5424SysLogHandler(Handler):
 
         Args:
             address (tuple):
-                address in the form of a (host, port) tuple
+                address in the form of a (host, port) tuple or a [host, port] list
 
             facility (int):
                 One of the ``rfc5424logging.LOG_*`` values.
@@ -232,7 +232,10 @@ class Rfc5424SysLogHandler(Handler):
             self.transport = transport.StreamTransport(self.stream)
         elif isinstance(self.address, str):
             self.transport = transport.UnixSocketTransport(self.address, self.socktype)
-        elif isinstance(self.address, tuple):
+        elif isinstance(self.address, tuple) or isinstance(self.address, list):
+            if isinstance(self.address, list):
+                self.address = tuple(self.address)
+
             if self.socktype == socket.SOCK_STREAM:
                 if self.tls_enable:
                     self.transport = transport.TLSSocketTransport(
