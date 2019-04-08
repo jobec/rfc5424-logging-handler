@@ -1,5 +1,6 @@
 # Config file for automatic testing at travis-ci.org
 
+dist: xenial
 language: python
 matrix:
     include:
@@ -11,9 +12,11 @@ matrix:
           env: TOXENV=py35
         - python: 3.6
           env: TOXENV=py36
-        - python: 3.5
+        - python: 3.7
+          env: TOXENV=py37
+        - python: 3.6
           env: TOXENV=flake8
-        - python: 3.5
+        - python: 3.6
           env: TOXENV=docs
 
 # command to install dependencies for getting Tox running, other dependencies are installed by Tox
