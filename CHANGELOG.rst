@@ -1,6 +1,17 @@
 Changelog
 ---------
 
+`1.4.2`_ - 2019/04/08
+~~~~~~~~~~~~~~~~~~~~~
+
+**Changed**
+
+* `#32`_ ``address`` can now also be a list, making loading settings form a config file possible.
+
+**Added**
+
+* Python 3.7 tests and support.
+
 `1.4.1`_ - 2019/02/16
 ~~~~~~~~~~~~~~~~~~~~~
 
@@ -137,6 +148,7 @@ No functional changes. Only documentation was changed.
 
 * Initial release
 
+.. _1.4.2: https://github.com/jobec/rfc5424-logging-handler/compare/1.4.1...1.4.2
 .. _1.4.1: https://github.com/jobec/rfc5424-logging-handler/compare/1.4.0...1.4.1
 .. _1.4.0: https://github.com/jobec/rfc5424-logging-handler/compare/1.3.0...1.4.0
 .. _1.3.0: https://github.com/jobec/rfc5424-logging-handler/compare/1.2.1...1.3.0
@@ -152,6 +164,7 @@ No functional changes. Only documentation was changed.
 .. _0.1.0: https://github.com/jobec/rfc5424-logging-handler/compare/0.0.2...0.1.0
 .. _0.0.2: https://github.com/jobec/rfc5424-logging-handler/compare/0.0.1...0.0.2
 
+.. _#32: https://github.com/jobec/rfc5424-logging-handler/issues/32
 .. _#29: https://github.com/jobec/rfc5424-logging-handler/issues/29
 .. _#27: https://github.com/jobec/rfc5424-logging-handler/issues/27
 .. _#23: https://github.com/jobec/rfc5424-logging-handler/issues/23
