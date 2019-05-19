@@ -1,6 +1,17 @@
 Changelog
 ---------
 
+`1.4.3`_ - 2019/05/19
+~~~~~~~~~~~~~~~~~~~~~
+
+**Changed**
+
+* `#34`_ Allow enterprise ID to contain sub-identifiers.
+
+**Fixed**
+
+* `#31`_ Correct handling of failed connection attempt in TCP transport handler.
+
 `1.4.2`_ - 2019/04/08
 ~~~~~~~~~~~~~~~~~~~~~
 
@@ -148,6 +159,7 @@ No functional changes. Only documentation was changed.
 
 * Initial release
 
+.. _1.4.3: https://github.com/jobec/rfc5424-logging-handler/compare/1.4.2...1.4.3
 .. _1.4.2: https://github.com/jobec/rfc5424-logging-handler/compare/1.4.1...1.4.2
 .. _1.4.1: https://github.com/jobec/rfc5424-logging-handler/compare/1.4.0...1.4.1
 .. _1.4.0: https://github.com/jobec/rfc5424-logging-handler/compare/1.3.0...1.4.0
@@ -164,7 +176,9 @@ No functional changes. Only documentation was changed.
 .. _0.1.0: https://github.com/jobec/rfc5424-logging-handler/compare/0.0.2...0.1.0
 .. _0.0.2: https://github.com/jobec/rfc5424-logging-handler/compare/0.0.1...0.0.2
 
+.. _#34: https://github.com/jobec/rfc5424-logging-handler/issues/34
 .. _#32: https://github.com/jobec/rfc5424-logging-handler/issues/32
+.. _#31: https://github.com/jobec/rfc5424-logging-handler/issues/31
 .. _#29: https://github.com/jobec/rfc5424-logging-handler/issues/29
 .. _#27: https://github.com/jobec/rfc5424-logging-handler/issues/27
 .. _#23: https://github.com/jobec/rfc5424-logging-handler/issues/23
