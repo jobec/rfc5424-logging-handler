@@ -25,7 +25,7 @@ from .handler import (
 )
 from .transport import FRAMING_NON_TRANSPARENT, FRAMING_OCTET_COUNTING
 
-__version__ = "1.4.2"
+__version__ = "1.4.3"
 
 __all__ = [
     'Rfc5424SysLogHandler',
