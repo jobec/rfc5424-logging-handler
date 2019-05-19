@@ -37,6 +37,8 @@ class TCPSocketTransport:
                 self.socket = socket.socket(family, socktype)
                 self.socket.settimeout(self.timeout)
                 self.socket.connect(sockaddr)
+                # Connected successfully. Erase any previous errors.
+                error = None
                 break
             except OSError as e:
                 error = e
