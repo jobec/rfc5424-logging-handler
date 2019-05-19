@@ -165,9 +165,10 @@ class Rfc5424SysLogHandler(Handler):
             structured_data (dict):
                 A dictionary with structured data that is added to every message. Per message your
                 can add more structured data by adding it to the ``extra`` argument of the log function.
-            enterprise_id (int):
+            enterprise_id (str):
                 The Private Enterprise Number. This is used to compose the structured data IDs when
-                they do not include an Enterprise ID and are not one of the reserved structured data IDs
+                they do not include an Enterprise ID and are not one of the reserved structured data IDs.
+                Can be a single PEN like ``32473`` or optionally contain sub-identifiers like ``32473.2.6``
             utc_timestamp (bool):
                 Whether the timestamp should be converted to UTC time or kept in the local timezone
             timeout (int):

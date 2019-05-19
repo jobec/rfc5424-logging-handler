@@ -129,6 +129,11 @@ from rfc5424logging import Rfc5424SysLogHandler
         b'<14>1 2000-01-01T17:11:11.111111+06:00 testhostname root 111'
         b' - [timeQuality isSynced="1"]'
         b' \xef\xbb\xbfThis is an interesting message'
+    ), (  # 22
+        {'address': address, 'enterprise_id': "32473.1.2"},
+        {'extra': {'structured_data': sd1_no_pen}},
+        b'<14>1 2000-01-01T17:11:11.111111+06:00 testhostname root 111'
+        b' - [my_sd_id1@32473.1.2 my_key1="my_value1"] \xef\xbb\xbfThis is an interesting message'
     ),
 ])
 def test_sd(logger, handler_kwargs, logger_kwargs, expected):
