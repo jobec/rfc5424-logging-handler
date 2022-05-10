@@ -90,6 +90,7 @@ class TLSSocketTransport(TCPSocketTransport):
         context = ssl.create_default_context(
             purpose=ssl.Purpose.SERVER_AUTH, cafile=self.tls_ca_bundle
         )
+        context.check_hostname = self.tls_verify
         context.verify_mode = ssl.CERT_REQUIRED if self.tls_verify else ssl.CERT_NONE
         server_hostname, _ = self.address
         if self.tls_client_cert:
