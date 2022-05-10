@@ -107,6 +107,7 @@ class Rfc5424SysLogHandler(Handler):
             tls_client_key=None,
             tls_key_password=None,
             stream=None,
+            sd_id_limit_override=False,
     ):
         """
         Returns a new instance of the Rfc5424SysLogHandler class intended to communicate with
@@ -216,6 +217,7 @@ class Rfc5424SysLogHandler(Handler):
         self.tls_client_key = tls_client_key
         self.tls_key_password = tls_key_password
         self.stream = stream
+        self.sd_id_limit_override = sd_id_limit_override
         self.transport = None
 
         if not (isinstance(self.facility, int) and LOG_KERN <= self.facility <= LOG_LOCAL7):
@@ -400,11 +402,11 @@ class Rfc5424SysLogHandler(Handler):
             elif '@' in sd_id:
                 sd_id, enterprise_id = sd_id.rsplit('@', 1)
 
-            if len(enterprise_id) > 30:
+            if not self.sd_id_limit_override and len(enterprise_id) > 30:
                 raise ValueError("Enterprise ID is too long. Impossible to build structured data ID.")
 
             sd_id = sd_id.replace('@', '')
-            if len(sd_id) + len(enterprise_id) > 32:
+            if not self.sd_id_limit_override and len(sd_id) + len(enterprise_id) > 32:
                 sd_id = sd_id[:31 - len(enterprise_id)]
             if sd_id not in REGISTERED_SD_IDs:
                 sd_id = '@'.join((sd_id, enterprise_id))
