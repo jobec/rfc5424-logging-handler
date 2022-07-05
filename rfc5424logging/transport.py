@@ -90,6 +90,9 @@ class TLSSocketTransport(TCPSocketTransport):
         context = ssl.create_default_context(
             purpose=ssl.Purpose.SERVER_AUTH, cafile=self.tls_ca_bundle
         )
+        # copied from https://github.com/jobec/rfc5424-logging-handler/pull/39
+        # if/when this PR gets merged we should use the pypi provided rfc5424-logging-handler package
+        context.check_hostname = self.tls_verify
         context.verify_mode = ssl.CERT_REQUIRED if self.tls_verify else ssl.CERT_NONE
         server_hostname, _ = self.address
         if self.tls_client_cert:
