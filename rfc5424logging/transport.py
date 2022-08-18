@@ -77,12 +77,14 @@ class TLSSocketTransport(TCPSocketTransport):
         tls_client_cert,
         tls_client_key,
         tls_key_password,
+        tls_ciphers,
     ):
         self.tls_ca_bundle = tls_ca_bundle
         self.tls_verify = tls_verify
         self.tls_client_cert = tls_client_cert
         self.tls_client_key = tls_client_key
         self.tls_key_password = tls_key_password
+        self.tls_ciphers = tls_ciphers
         super(TLSSocketTransport, self).__init__(address, timeout, framing=framing)
 
     def open(self):
@@ -90,6 +92,8 @@ class TLSSocketTransport(TCPSocketTransport):
         context = ssl.create_default_context(
             purpose=ssl.Purpose.SERVER_AUTH, cafile=self.tls_ca_bundle
         )
+        if self.tls_ciphers:
+            context.set_ciphers(self.tls_ciphers)
         context.verify_mode = ssl.CERT_REQUIRED if self.tls_verify else ssl.CERT_NONE
         server_hostname, _ = self.address
         if self.tls_client_cert:
