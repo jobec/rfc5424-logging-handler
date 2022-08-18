@@ -106,6 +106,7 @@ class Rfc5424SysLogHandler(Handler):
             tls_client_cert=None,
             tls_client_key=None,
             tls_key_password=None,
+            tls_ciphers=None,
             stream=None,
     ):
         """
@@ -189,6 +190,8 @@ class Rfc5424SysLogHandler(Handler):
                 Path to a file containing the client private key.
             tls_key_password (str):
                 Optionally the password for decrypting the specified private key.
+            tls_ciphers (str):
+                Optionally the ciphers to use in the TLS connection.
             stream (io.BufferedIOBase, file, io.TextIOBase):
                 Optionally a stream object to send the message to. See https://docs.python.org/3/library/io.html
                 for details.
@@ -215,6 +218,7 @@ class Rfc5424SysLogHandler(Handler):
         self.tls_client_cert = tls_client_cert
         self.tls_client_key = tls_client_key
         self.tls_key_password = tls_key_password
+        self.tls_ciphers = tls_ciphers
         self.stream = stream
         self.transport = None
 
@@ -237,9 +241,15 @@ class Rfc5424SysLogHandler(Handler):
             if self.socktype == socket.SOCK_STREAM:
                 if self.tls_enable:
                     self.transport = transport.TLSSocketTransport(
-                        self.address, self.timeout, self.framing,
-                        self.tls_ca_bundle, self.tls_verify,
-                        self.tls_client_cert, self.tls_client_key, self.tls_key_password
+                        self.address,
+                        self.timeout,
+                        self.framing,
+                        self.tls_ca_bundle,
+                        self.tls_verify,
+                        self.tls_client_cert,
+                        self.tls_client_key,
+                        self.tls_key_password,
+                        self.tls_ciphers,
                     )
                 else:
                     self.transport = transport.TCPSocketTransport(self.address, self.timeout, self.framing)
