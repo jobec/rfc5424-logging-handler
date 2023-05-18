@@ -7,7 +7,6 @@ from datetime import datetime
 from logging import Handler
 
 from pytz import utc
-from tzlocal import get_localzone
 
 from rfc5424logging import transport
 
@@ -218,6 +217,9 @@ class Rfc5424SysLogHandler(Handler):
         self.stream = stream
         self.transport = None
 
+        from tzlocal import get_localzone
+        self._local_zone = get_localzone()
+
         if not (isinstance(self.facility, int) and LOG_KERN <= self.facility <= LOG_LOCAL7):
             raise ValueError("Facility is not valid")
 
@@ -366,7 +368,7 @@ class Rfc5424SysLogHandler(Handler):
         # HEADER
         pri = '<%d>' % self.encode_priority(self.facility, record.levelname)
         version = SYSLOG_VERSION
-        timestamp = datetime.fromtimestamp(record.created, get_localzone())
+        timestamp = datetime.fromtimestamp(record.created, self._local_zone)
         if self.utc_timestamp:
             timestamp = timestamp.astimezone(utc)
         timestamp = timestamp.isoformat()
